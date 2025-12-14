@@ -590,31 +590,54 @@
       font-family: var(--font-mono);
       font-size: 12px;
       line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 12px;
+      gap: 6px;
+    }
+    .term-output {
+      flex: 1;
       overflow: auto;
-      padding: 10px 12px;
+      min-height: 0;
     }
     .term-line { color: var(--panel-fg, var(--fg)); }
     .term-dim { color: var(--muted); }
     .term-err { color: var(--danger); }
     .term-ok  { color: #89d185; }
 
-    .term-input {
-      display: flex; gap: 8px; align-items: center;
-      padding: 0 12px 10px;
-      border-top: 1px solid rgba(255,255,255,.06);
+    .term-input-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      background: rgba(255,255,255,.03);
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.08);
     }
-    .prompt { color: #89d185; }
-    .cmd-wrap { position: relative; flex: 1; }
+    .prompt {
+      color: #89d185;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      flex-shrink: 0;
+    }
+    .cmd-wrap {
+      position: relative;
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+    }
     .cmd {
       width: 100%;
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.08);
+      background: transparent;
+      border: 0;
       color: var(--fg);
-      border-radius: 8px;
-      padding: 8px 10px;
+      padding: 0;
       outline: none;
       font-family: var(--font-mono);
       font-size: 12px;
+      line-height: 1.5;
     }
     /* Terminal IntelliSense-style suggest dropdown */
     .suggest {
@@ -1046,18 +1069,14 @@
             </div>
           </div>
 
-          <div style="min-height:0; display:grid; grid-template-rows:1fr auto;">
-            <div class="terminal" id="termOut"></div>
-            <div class="term-input">
-              <span class="prompt">
-                <i class="codicon codicon-chevron-right"></i>
-                <svg class="icon fallback-icon"><use href="#icon-chevron-right"/></svg>
-              </span>
+          <div class="terminal" id="termOut">
+            <div class="term-output" id="termOutput"></div>
+            <div class="term-input-line">
+              <span class="prompt">$</span>
               <div class="cmd-wrap">
-                <input class="cmd" id="termIn" placeholder="Type 'help' for commands" />
+                <input class="cmd" id="termIn" placeholder="Type 'help' for commands" autocomplete="off" />
                 <div class="suggest" id="termSuggest"></div>
               </div>
-              <button class="btn" id="runCmd">Run</button>
             </div>
           </div>
         </div>
@@ -1165,6 +1184,7 @@
     const palInput = document.getElementById('palInput');
     const palList = document.getElementById('palList');
     const termOut = document.getElementById('termOut');
+    const termOutput = document.getElementById('termOutput');
     const termIn = document.getElementById('termIn');
     const termSuggest = document.getElementById('termSuggest');
     const projectQuick = document.getElementById('projectQuick');
@@ -1832,7 +1852,6 @@ body {
     });
     termIn.addEventListener('blur', ()=>{ setTimeout(()=>termSuggest.classList.remove('show'), 120); });
 
-    document.getElementById('runCmd').onclick=()=>{runTerminalCommand(termIn.value);termIn.value='';termIn.focus();};
     termIn.addEventListener('keydown',(e)=>{if(e.key==='Enter') {e.preventDefault();runTerminalCommand(termIn.value);termIn.value='';}else if(e.key==='ArrowUp') {e.preventDefault();if(termHistoryIndex>0)termIn.value=termHistory[--termHistoryIndex]||'';}else if(e.key==='ArrowDown') {e.preventDefault();if(termHistoryIndex<termHistory.length-1)termIn.value=termHistory[++termHistoryIndex]||'';else{termHistoryIndex=termHistory.length;termIn.value='';}}});
 
     window.addEventListener('keydown',(e)=>{const isPaletteOpen=overlay.classList.contains('show');if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();return;}if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();return;}});
