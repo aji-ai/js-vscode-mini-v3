@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VS Code-ish</title>
+  
+  <!-- 
+    SUSTAINABILITY NOTE:
+    For production, use official Codicons from CDN or self-hosted:
+    
+    Option 1 (CDN - Most Sustainable):
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@vscode/codicons@0.0.36/dist/codicon.css">
+    
+    Option 2 (Self-Hosted - Recommended for restricted networks):
+    Download from: https://github.com/microsoft/vscode-codicons/releases
+    Include: codicon.css + codicon.ttf in your project
+    
+    This file uses embedded SVGs for zero dependencies but is limited to ~25 icons.
+    Codicons has 400+ icons and is actively maintained by Microsoft.
+  -->
+  <!-- Attempt to use self-hosted Codicons first; if not present, SVG fallbacks are used -->
+  <link rel="stylesheet" href="./assets/codicons/codicon.css" />
+  
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    .icon {
+      width: 16px;
+      height: 16px;
+      display: inline-block;
+      vertical-align: middle;
+      fill: currentColor;
+      flex-shrink: 0;
+      overflow: visible;
+    }
+    .icon-lg { 
+      width: 20px; 
+      height: 20px; 
+      flex-shrink: 0;
+      overflow: visible;
+    }
+    
+    :root{
+      --bg: #1e1e1e;
+      --fg: #d4d4d4;
+      --muted: #9aa0a6;
+      --border: #2a2a2a;
+      --shadow: rgba(0,0,0,.35);
+
+      --titlebar-bg:#1f1f1f;
+      --activity-bg:#252526;
+      --sidebar-bg:#252526;
+      --editor-bg:#1e1e1e;
+      --panel-bg:#1b1b1b;
+      --status-bg:#007acc;
+
+      --accent:#007acc;
+      --accent-2:#3794ff;
+      --danger:#f44747;
+
+      --tab-bg:#2d2d2d;
+      --tab-active-bg:#1e1e1e;
+
+      --font-ui: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+      --fs-ui: 12px;
+      --fs-code: 13px;
+      --lh-code: 1.6;
+
+      --activity-w: 48px;
+      --sidebar-w: 280px;
+      --titlebar-h: 34px;
+      --statusbar-h: 22px;
+    }
+
+    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: var(--fs-ui); }
+    .workbench {
+      height: 100%;
+      display: grid;
+      grid-template-rows: var(--titlebar-h) 1fr var(--statusbar-h);
+    }
+
+    /* Codicon fallback control */
+    .codicon {
+      display: inline-block;
+      font: normal normal normal 16px/1 codicon;
+      vertical-align: middle;
+      width: 16px;
+      height: 16px;
+    }
+    .codicon.codicon-lg { font-size: 20px; width: 20px; height: 20px; }
+    .has-codicon .fallback-icon { display: none !important; }
+    .no-codicon .codicon { display: none !important; }
+
+    .titlebar {
+      background: var(--titlebar-bg);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 0 10px;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .title-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .window-dots { display: flex; gap: 6px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: #555; }
+    .dot.red { background: #ff5f57; }
+    .dot.yellow { background: #febc2e; }
+    .dot.green { background: #28c840; }
+    .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+    .title-actions { display: flex; gap: 6px; align-items: center; }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: var(--fs-ui);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn:hover { border-color: #3a3a3a; }
+    .btn.primary { border-color: var(--accent); color: #cfeaff; }
+    .btn.icon { width: 28px; height: 26px; justify-content: center; padding: 0; }
+
+    .main {
+      display: grid;
+      grid-template-columns: var(--activity-w) var(--sidebar-w) 1fr var(--auxiliary-w);
+      min-height: 0;
+    }
+
+    :root { --auxiliary-w: 360px; }
+
+    .activitybar {
+      background: var(--activity-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 8px;
+      user-select: none;
+    }
+    .act {
+      width: 34px; height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      cursor: pointer;
+      overflow: visible;
+    }
+    .act .icon-lg { margin: 0 2px; }
+    .act.active { color: #fff; background: rgba(255,255,255,.06); outline: 1px solid rgba(255,255,255,.08); }
+    .act:hover { background: rgba(255,255,255,.05); color: #fff; }
+
+    .sidebar {
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      overflow: visible;
+    }
+    .sidebar-header {
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      user-select: none;
+    }
+    .sidebar-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .sidebar-body { padding: 8px; overflow-x: visible; overflow-y: auto; }
+
+    .tree { font-family: var(--font-ui); font-size: var(--fs-ui); line-height: 1.8; }
+    .tree .item {
+      display: flex; gap: 8px; align-items: center;
+      padding: 4px 8px; border-radius: 6px; cursor: pointer;
+      color: var(--fg);
+      overflow: visible;
+    }
+    .tree .item:hover { background: rgba(255,255,255,.05); }
+    .tree .item.active { background: rgba(0,122,204,.18); outline: 1px solid rgba(0,122,204,.25); }
+    .tree .item .icon { flex-shrink: 0; margin: 0 2px; }
+
+    .content {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: var(--editor-bg);
+    }
+
+    .tabs {
+      display: flex; gap: 1px;
+      background: var(--border);
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+      overflow-x: auto;
+    }
+    .tab {
+      background: var(--tab-bg);
+      padding: 6px 10px;
+      display: flex; align-items: center; gap: 8px;
+      cursor: pointer;
+      min-width: 120px;
+      max-width: 260px;
+      flex-shrink: 0;
+      overflow: visible;
+    }
+    .tab:hover { background: rgba(255,255,255,.05); }
+    .tab.active { background: var(--tab-active-bg); border-bottom: 2px solid var(--accent); color: #fff; }
+    .tab .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab .icon { flex-shrink: 0; margin: 0 2px; }
+    .tab .close { margin-left:auto; opacity:.7; }
+    .tab:hover .close { opacity: 1; }
+    .dot-unsaved { width: 7px; height: 7px; border-radius: 999px; background: var(--accent-2); flex-shrink: 0; margin: 0 2px; }
+
+    .editor-wrap {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      overflow: hidden;
+    }
+    .gutter {
+      background: #191919;
+      border-right: 1px solid var(--border);
+      padding: 10px 0;
+      font-family: var(--font-mono);
+      font-size: var(--fs-code);
+      line-height: var(--lh-code);
+      color: #6b6b6b;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+    }
+    .gutter div { padding: 0 10px; }
+    .gutter div.current-line { background: rgba(255,255,255,.03); }
+    
+    .editor {
+      position: relative;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: var(--fs-code);
+      line-height: var(--lh-code);
+    }
+    
+    .editor-container { 
+      position: relative; 
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .editor textarea {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      min-height: 100%;
+      resize: none;
+      border: 0;
+      outline: none;
+      padding: 10px 12px;
+      background: transparent;
+      color: transparent;
+      caret-color: #fff;
+      font-family: var(--font-mono);
+      font-size: var(--fs-code);
+      line-height: var(--lh-code);
+      white-space: pre;
+      overflow: hidden;
+      tab-size: 2;
+      z-index: 2;
+      word-wrap: normal;
+      overflow-wrap: normal;
+      letter-spacing: 0;
+      word-spacing: 0;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      margin: 0;
+      border: none;
+      font-variant-ligatures: none;
+      font-feature-settings: normal;
+    }
+    
+    .highlight {
+      position: absolute;
+      inset: 0;
+      padding: 10px 12px;
+      white-space: pre;
+      pointer-events: none;
+      z-index: 1;
+      font-family: var(--font-mono);
+      font-size: var(--fs-code);
+      line-height: var(--lh-code);
+      word-wrap: normal;
+      overflow-wrap: normal;
+      letter-spacing: 0;
+      word-spacing: 0;
+      text-rendering: geometricPrecision;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      tab-size: 2;
+      margin: 0;
+      border: none;
+      font-variant-ligatures: none;
+      font-feature-settings: normal;
+    }
+    
+    .highlight .line { 
+      display: block;
+      line-height: var(--lh-code);
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+    .highlight .line.current-line { background: rgba(255,255,255,.03); }
+
+    /* Ensure token spans don't add spacing */
+    .highlight span {
+      display: inline;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      font-size: inherit;
+      line-height: inherit;
+      letter-spacing: inherit;
+      word-spacing: inherit;
+      text-rendering: inherit;
+    }
+    
+    .tok-k { color: #c586c0; }
+    .tok-s { color: #ce9178; }
+    .tok-n { color: #b5cea8; }
+    .tok-c { color: #6a9955; }
+    .tok-f { color: #dcdcaa; }
+    .tok-t { color: #4ec9b0; }
+
+    .panel {
+      background: var(--panel-bg);
+      border-top: 1px solid var(--border);
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 34px 1fr;
+    }
+    .panel-tabs {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 8px;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+    .panel-left { display:flex; gap: 6px; align-items:center; }
+    .pill {
+      padding: 6px 10px; border-radius: 999px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px;
+    }
+    .pill.active { border-color: rgba(0,122,204,.45); background: rgba(0,122,204,.18); }
+
+    .terminal {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.5;
+      overflow: auto;
+      padding: 10px 12px;
+    }
+    .term-line { color: var(--fg); }
+    .term-dim { color: var(--muted); }
+    .term-err { color: var(--danger); }
+    .term-ok  { color: #89d185; }
+
+    .term-input {
+      display: flex; gap: 8px; align-items: center;
+      padding: 0 12px 10px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .prompt { color: #89d185; }
+    .cmd {
+      flex: 1;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--fg);
+      border-radius: 8px;
+      padding: 8px 10px;
+      outline: none;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .statusbar {
+      background: var(--status-bg);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 0 10px;
+      color: white;
+      user-select: none;
+    }
+    .status-left, .status-right { display:flex; gap: 10px; align-items:center; }
+    .status-item { display: flex; align-items: center; gap: 4px; }
+
+    /* Auxiliary (Chat) Bar */
+    .auxiliarybar {
+      background: var(--sidebar-bg);
+      border-left: 1px solid var(--border);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-width: 220px;
+      overflow: hidden;
+    }
+    .aux-header {
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      user-select: none;
+    }
+    .aux-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .aux-body { padding: 10px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+    .aux-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
+    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--fg); border-radius: 8px; padding: 8px 10px; outline: none; font-family: var(--font-ui); font-size: 12px; }
+    .msg { display: inline-flex; max-width: 90%; padding: 8px 10px; border-radius: 8px; }
+    .msg.user { align-self: flex-end; background: rgba(0,122,204,.18); border: 1px solid rgba(0,122,204,.25); }
+    .msg.bot { align-self: flex-start; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
+    .resizer-x { width: 4px; cursor: col-resize; background: transparent; }
+    .resizer-x:hover { background: rgba(255,255,255,.06); }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.35);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 60px;
+      z-index: 50;
+    }
+    .overlay.show { display: flex; }
+    .palette {
+      width: min(860px, calc(100vw - 24px));
+      background: #252526;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 8px;
+      box-shadow: 0 18px 60px var(--shadow);
+      overflow: hidden;
+    }
+    .palette input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      padding: 12px;
+      background: #1f1f1f;
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 14px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .palette-list { max-height: 320px; overflow: auto; }
+    .pal-item {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      align-items: center;
+    }
+    .pal-item:hover, .pal-item.active { background: rgba(0,122,204,.18); }
+    .pal-desc { color: var(--muted); font-size: 11px; }
+    .pal-kbd { color: var(--muted); font-size: 11px; }
+
+    .hide-activity .activitybar { display: none !important; }
+    .hide-activity .main { grid-template-columns: 0px var(--sidebar-w) 1fr; }
+    .hide-sidebar .sidebar { display: none !important; }
+    .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px 1fr; }
+    .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px 1fr; }
+    .hide-panel .panel { display: none !important; }
+    .hide-panel .content { grid-template-rows: auto 1fr 0px; }
+    .hide-auxiliary .auxiliarybar, .hide-auxiliary .resizer-x { display: none !important; }
+    .hide-auxiliary .main { grid-template-columns: var(--activity-w) var(--sidebar-w) 1fr 0px; }
+  </style>
+</head>
+<body class="no-codicon">
+  <!-- Embedded SVG Icon Library -->
+  <svg style="display:none">
+    <!-- Official VS Code Logo -->
+    <symbol id="icon-vscode" viewBox="-2 -2 20 20">
+      <path d="M11.5 0L15 1.5v13L11.5 16 1 10.5v-5L11.5 0zm.5 2.828L4.328 8 12 13.172V2.828zM10 8L3.5 12V4L10 8z"/>
+    </symbol>
+    
+    <symbol id="icon-files" viewBox="-2 -2 20 20">
+      <path d="M14.5 2H7.71l-.85-.85L6.51 1h-5l-.5.5v11l.5.5h13l.5-.5v-10zm-.51 10h-12V2h4.49l.35.15.86.86H14v9z"/>
+    </symbol>
+    
+    <symbol id="icon-search" viewBox="-2 -2 20 20">
+      <path d="M11.5 7a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0zM7 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zm3.77-.79l4.5 4.5-.7.7-4.5-4.5.7-.7z"/>
+    </symbol>
+    
+    <symbol id="icon-git" viewBox="-2 -2 20 20">
+      <path d="M15.85 7.65l-6.5-6.5-.35-.35-.35.35-6.5 6.5-.35.35.35.36 6.5 6.5.35.35.35-.35 6.5-6.5.35-.36-.35-.35zM2.5 8l5.5-5.5L13.5 8 8 13.5 2.5 8z"/>
+      <path d="M7.65 11.65L7 11l1.65-1.65-1.3-1.3L6 9.4 4.35 7.75l.7-.7L6.4 8.4 7.7 7.1 6.4 5.75l.7-.7L8.4 6.4 9.7 5.1l.7.7-1.3 1.3 1.65 1.65-.7.7L9 8.1 7.65 9.4l1.3 1.3-.7.7L6.95 10z"/>
+    </symbol>
+    
+    <symbol id="icon-debug" viewBox="-2 -2 20 20">
+      <path d="M8 1l7 3.5-7 3.5-7-3.5L8 1zm6 5.96L8 10.46l-6-3.5V9l6 3.5L14 9V6.96zM2 10.46L8 13.96l6-3.5V13l-6 2-6-2v-2.54z"/>
+    </symbol>
+    
+    <symbol id="icon-extensions" viewBox="-2 -2 20 20">
+      <path d="M13 13h-2v-2h2v2zm-2-9V1.5l-.5-.5h-9l-.5.5v13l.5.5h9l.5-.5V12h-1v2H2V2h8v2h1zM9 4l1.35 1H13v1.5L14.5 8 13 9.5V11h-2.65L9 12H7.5L6 10.5 4.5 12H3V9.5L1.5 8 3 6.5V5h2.65L7 4h2z"/>
+    </symbol>
+    
+    <symbol id="icon-settings" viewBox="-2 -2 20 20">
+      <path d="M9.1 4.4L8.6 2H7.4l-.5 2.4-.7.3-2-1.3-.9.8 1.3 2-.3.7-2.4.5v1.2l2.4.5.3.7-1.3 2 .8.9 2-1.3.7.3.5 2.4h1.2l.5-2.4.7-.3 2 1.3.9-.8-1.3-2 .3-.7 2.4-.5V7.4l-2.4-.5-.3-.7 1.3-2-.8-.9-2 1.3-.7-.3zM9.4 1l.5 2.4L12 2.1l2 2-1.4 2.1 2.4.4v2.8l-2.4.4L14 11.9l-2 2-2.1-1.4-.4 2.4H6.7l-.4-2.4L4.2 14l-2-2 1.4-2.1L1.2 9.5V6.7l2.4-.4L2.2 4.2l2-2 2.1 1.4.4-2.4h2.7zm-1.5 9.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0-5c1.7 0 3 1.3 3 3s-1.3 3-3 3-3-1.3-3-3 1.3-3 3-3z"/>
+    </symbol>
+    
+    <symbol id="icon-close" viewBox="-2 -2 20 20">
+      <path d="M8 8.707l3.646 3.647.708-.707L8.707 8l3.647-3.646-.707-.708L8 7.293 4.354 3.646l-.707.708L7.293 8l-3.646 3.646.707.708L8 8.707z"/>
+    </symbol>
+    
+    <symbol id="icon-file" viewBox="-2 -2 20 20">
+      <path d="M13.5 2h-8l-.5.5v11l.5.5h9l.5-.5v-8l-1-1zm-.5 10h-8V3h6.5l1.5 1.5v7.5z"/>
+    </symbol>
+    
+    <symbol id="icon-file-code" viewBox="-2 -2 20 20">
+      <path d="M13.5 2h-8l-.5.5v11l.5.5h9l.5-.5v-8l-1-1zm-.5 10h-8V3h6.5l1.5 1.5v7.5z"/>
+      <path d="M9.08 10.42L8.37 11l2.46 2H9.42l-2.29-2L9.42 9h1.41l-1.75 1.42zM5.58 11h1.41l2.29-2-2.29-2H5.58l1.75 1.58L5.58 11z"/>
+    </symbol>
+    
+    <symbol id="icon-json" viewBox="-2 -2 20 20">
+      <path d="M6 2.5V2h-.5L1 2.5v.5l1.5 1.5v2L1 8l1.5 1.5v2L1 13v.5l4.5.5h.5v-.5L4.5 12H4v-2h1V8.5L3.5 7 5 5.5V4h.5V2.5zM10 2.5V2h.5l4.5.5v.5l-1.5 1.5v2L15 8l-1.5 1.5v2L15 13v.5l-4.5.5H10v-.5l1.5-1.5H12v-2h-1V8.5l1.5-1.5L11 5.5V4h-.5V2.5z"/>
+    </symbol>
+    
+    <symbol id="icon-markdown" viewBox="-2 -2 20 20">
+      <path d="M1 3.5l.5-.5h13l.5.5v9l-.5.5h-13l-.5-.5v-9zm1 8.5h12V4H2v8zm9-6h1v5h-1V8.2L9 9.8 7 8.2V11H6V6h1l2 1.6L11 6z"/>
+    </symbol>
+    
+    <symbol id="icon-css" viewBox="-2 -2 20 20">
+      <path d="M2.5 2.5l.5-.5h10l.5.5 1 11.5-.5.5-5.5 1.5h-.5l-5.5-1.5-.5-.5 1-11.5zm1.577 1.5l-.839 9.596 4.762 1.31 4.762-1.31L13.923 4H4.077z"/>
+    </symbol>
+    
+    <symbol id="icon-terminal" viewBox="-2 -2 20 20">
+      <path d="M13.655 3.56L8.918.75a1.785 1.785 0 0 0-1.821 0L2.363 3.56a1.889 1.889 0 0 0-.921 1.628v5.624a1.889 1.889 0 0 0 .913 1.627l4.736 2.812a1.785 1.785 0 0 0 1.822 0l4.736-2.812a1.888 1.888 0 0 0 .913-1.627V5.188a1.889 1.889 0 0 0-.907-1.628zm-3.655 8.44L7 14v-1l3-2-3-2V8l3 2 3-2v1l-3 2 3 2v1z"/>
+    </symbol>
+    
+    <symbol id="icon-warning" viewBox="-2 -2 20 20">
+      <path d="M7.56 1h.88l6.54 12.26-.44.74H1.44L1 13.26 7.56 1zM8 2.28L2.28 13H13.7L8 2.28zM8.625 12v-1h-1.25v1h1.25zm-1.25-2V6h1.25v4h-1.25z"/>
+    </symbol>
+    
+    <symbol id="icon-output" viewBox="-2 -2 20 20">
+      <path d="M1.5 2h13l.5.5v10l-.5.5h-13l-.5-.5v-10l.5-.5zM2 3v9h12V3H2zm2 6h1v1H4V9zm2 0h1v1H6V9zm2 0h1v1H8V9z"/>
+    </symbol>
+    
+    <symbol id="icon-chevron-right" viewBox="-2 -2 20 20">
+      <path d="M6.146 3.854L10.793 8.5l-4.647 4.646-.708-.707L9.793 8.5 5.439 4.561l.707-.707z"/>
+    </symbol>
+    
+    <symbol id="icon-info" viewBox="-2 -2 20 20">
+      <path d="M8.568 1.031A6.8 6.8 0 0 1 12.76 3.05a7.06 7.06 0 0 1 .46 9.39 6.85 6.85 0 0 1-8.58 1.74 7 7 0 0 1-3.12-3.5 7.12 7.12 0 0 1-.23-4.71 7 7 0 0 1 2.77-3.79 6.8 6.8 0 0 1 4.508-1.149zM9.04 13.88a5.89 5.89 0 0 0 3.41-2.07 6.07 6.07 0 0 0-.4-8.06 5.82 5.82 0 0 0-7.43-.74 6.06 6.06 0 0 0 .5 10.29 5.81 5.81 0 0 0 3.92.58zM7.375 6h1.25v5h-1.25V6zm0-1.5h1.25v1.25h-1.25V4.5z"/>
+    </symbol>
+    
+    <symbol id="icon-sidebar" viewBox="-2 -2 20 20">
+      <path d="M3 3v10h10V3H3zm9 9H7V4h5v8z"/>
+    </symbol>
+  </svg>
+
+  <div class="workbench" id="wb">
+    <div class="titlebar">
+      <div class="title-left">
+        <div class="window-dots">
+          <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
+        </div>
+        <svg class="icon fallback-icon" style="width:20px;height:20px"><use href="#icon-vscode"/></svg>
+        <div class="title" id="titleText">VS Code-ish</div>
+      </div>
+      <div class="title-actions">
+        <button class="btn icon" title="Command Palette (Ctrl+Shift+P)" id="btnPalette">
+          <i class="codicon codicon-search"></i>
+          <svg class="icon fallback-icon"><use href="#icon-search"/></svg>
+        </button>
+        <button class="btn icon" title="Quick Open (Ctrl+P)" id="btnQuickOpen">
+          <i class="codicon codicon-files"></i>
+          <svg class="icon fallback-icon"><use href="#icon-files"/></svg>
+        </button>
+        <button class="btn" title="Toggle Sidebar (Ctrl+B)" id="btnSidebar">
+          <i class="codicon codicon-layout-sidebar-left-off"></i>
+          <svg class="icon fallback-icon"><use href="#icon-sidebar"/></svg> Sidebar
+        </button>
+        <button class="btn primary" title="Toggle Terminal (Ctrl+`)" id="btnTerminal">
+          <i class="codicon codicon-terminal"></i>
+          <svg class="icon fallback-icon"><use href="#icon-terminal"/></svg> Terminal
+        </button>
+        <button class="btn icon" title="Chat" id="btnChat">
+          <i class="codicon codicon-comment-discussion"></i>
+          <svg class="icon fallback-icon"><use href="#icon-info"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="activitybar">
+        <div class="act active" data-view="explorer" title="Explorer">
+          <i class="codicon codicon-files codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-files"/></svg>
+        </div>
+        <div class="act" data-view="search" title="Search">
+          <i class="codicon codicon-search codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-search"/></svg>
+        </div>
+        <div class="act" data-view="scm" title="Source Control">
+          <i class="codicon codicon-source-control codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-git"/></svg>
+        </div>
+        <div class="act" data-view="run" title="Run and Debug">
+          <i class="codicon codicon-debug-alt codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-debug"/></svg>
+        </div>
+        <div class="act" data-view="ext" title="Extensions">
+          <i class="codicon codicon-extensions codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-extensions"/></svg>
+        </div>
+        <div style="flex:1"></div>
+        <div class="act" title="Settings">
+          <i class="codicon codicon-settings-gear codicon-lg"></i>
+          <svg class="icon icon-lg fallback-icon"><use href="#icon-settings"/></svg>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title" id="sidebarTitle">EXPLORER</div>
+          <button class="btn icon" id="btnSidebarClose">
+            <i class="codicon codicon-close"></i>
+            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
+          </button>
+        </div>
+        <div class="sidebar-body">
+          <div class="tree" id="tree"></div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="tabs" id="tabs"></div>
+
+        <div class="editor-wrap">
+          <div class="gutter" id="gutter"></div>
+          <div class="editor" id="editor">
+            <div class="editor-container">
+              <pre class="highlight" id="hl"></pre>
+              <textarea id="ta" spellcheck="false"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-tabs">
+            <div class="panel-left">
+              <div class="pill active">
+                <i class="codicon codicon-terminal"></i>
+                <svg class="icon fallback-icon"><use href="#icon-terminal"/></svg> Terminal
+              </div>
+              <div class="pill">
+                <i class="codicon codicon-warning"></i>
+                <svg class="icon fallback-icon"><use href="#icon-warning"/></svg> Problems
+              </div>
+              <div class="pill">
+                <i class="codicon codicon-output"></i>
+                <svg class="icon fallback-icon"><use href="#icon-output"/></svg> Output
+              </div>
+            </div>
+            <div class="panel-right">
+              <button class="btn icon" id="btnPanelClose">
+                <i class="codicon codicon-close"></i>
+                <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div style="min-height:0; display:grid; grid-template-rows:1fr auto;">
+            <div class="terminal" id="termOut"></div>
+            <div class="term-input">
+              <span class="prompt">
+                <i class="codicon codicon-chevron-right"></i>
+                <svg class="icon fallback-icon"><use href="#icon-chevron-right"/></svg>
+              </span>
+              <input class="cmd" id="termIn" placeholder="Type 'help' for commands" />
+              <button class="btn" id="runCmd">Run</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="resizer-x" id="auxResizer"></div>
+      <div class="auxiliarybar" id="aux">
+        <div class="aux-header">
+          <div class="aux-title">CHAT</div>
+          <button class="btn icon" id="btnAuxClose">
+            <i class="codicon codicon-close"></i>
+            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
+          </button>
+        </div>
+        <div class="aux-body" id="chatLog"></div>
+        <div class="aux-input">
+          <input id="chatInput" placeholder="Ask something…" />
+          <button class="btn" id="chatSend">
+            <i class="codicon codicon-send"></i>
+            <svg class="icon fallback-icon"><use href="#icon-output"/></svg> Send
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="statusbar">
+      <div class="status-left">
+        <span class="status-item">
+          <i class="codicon codicon-info"></i>
+          <svg class="icon fallback-icon"><use href="#icon-info"/></svg>
+          <span id="statusMsg">Ready</span>
+        </span>
+      </div>
+      <div class="status-right">
+        <span class="status-item">
+          <i class="codicon codicon-code"></i>
+          <svg class="icon fallback-icon"><use href="#icon-file-code"/></svg>
+          <span id="statusFile">app.js</span>
+        </span>
+        <span id="statusPos">Ln 1, Col 1</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="palette">
+      <input id="palInput" autocomplete="off" placeholder="Type a command…" />
+      <div class="palette-list" id="palList"></div>
+    </div>
+  </div>
+
+  <script>
+    // [Previous JavaScript code - same as before, keeping it concise]
+    const wb = document.getElementById('wb');
+    const ta = document.getElementById('ta');
+    const hl = document.getElementById('hl');
+    const gutter = document.getElementById('gutter');
+    const editor = document.getElementById('editor');
+    const statusMsg = document.getElementById('statusMsg');
+    const statusFile = document.getElementById('statusFile');
+    const statusPos = document.getElementById('statusPos');
+    const titleText = document.getElementById('titleText');
+    const tree = document.getElementById('tree');
+    const sidebarTitle = document.getElementById('sidebarTitle');
+    const tabs = document.getElementById('tabs');
+    const overlay = document.getElementById('overlay');
+    const palInput = document.getElementById('palInput');
+    const palList = document.getElementById('palList');
+    const termOut = document.getElementById('termOut');
+    const termIn = document.getElementById('termIn');
+    const btnChat = document.getElementById('btnChat');
+    const aux = document.getElementById('aux');
+    const auxResizer = document.getElementById('auxResizer');
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+
+    const fileIcons = {
+      'js': 'file-code', 'jsx': 'file-code', 'ts': 'file-code',
+      'json': 'json', 'md': 'markdown', 'css': 'css',
+      'html': 'file-code', 'default': 'file'
+    };
+
+    // Prefer Codicons if font is available; otherwise use embedded SVG fallbacks
+    (function ensureCodiconDetection(){
+      try {
+        if (!('fonts' in document)) return;
+        document.fonts.load('16px codicon').then(list => {
+          if (list && list.length) {
+            document.body.classList.remove('no-codicon');
+            document.body.classList.add('has-codicon');
+          }
+        });
+      } catch {}
+    })();
+
+    function iconHTML(name, extraClass='') {
+      // Renders a codicon + SVG fallback pair
+      const cod = `<i class="codicon codicon-${name}${extraClass ? ' '+extraClass : ''}"></i>`;
+      const svg = `<svg class="icon fallback-icon${extraClass ? ' '+extraClass : ''}"><use href="#icon-${name}"/></svg>`;
+      return cod + svg;
+    }
+
+    function getIcon(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      return fileIcons[ext] || fileIcons.default;
+    }
+
+    const defaultFiles = {
+      'app.js': `// app.js
+function greet(name) {
+  return \`Hello, \${name}!\`;
+}
+
+const who = "world";
+console.log(greet(who));`,
+      'README.md': `# VS Code-ish
+
+## Official VS Code Logo
+Now using the authentic VS Code logo icon!
+
+## Sustainability Path
+**Current:** Embedded SVG icons (25 icons)
+**Recommended:** Official Codicons (400+ icons)
+
+### How to Upgrade to Codicons:
+1. Download from: https://github.com/microsoft/vscode-codicons
+2. Self-host \`codicon.css\` and \`codicon.ttf\`
+3. Replace SVG usage with: \`<i class="codicon codicon-name"></i>\`
+
+## Features
+✅ Official VS Code logo
+✅ Syntax highlighting  
+✅ Current line highlighting
+✅ localStorage persistence
+✅ Terminal with history
+✅ Keyboard shortcuts
+
+## Shortcuts
+**Ctrl+Shift+P** - Command Palette
+**Ctrl+P** - Quick Open
+**Ctrl+B** - Toggle Sidebar  
+**Ctrl+\`** - Toggle Terminal
+**Ctrl+S** - Save`,
+      'style.css': `:root {
+  --primary: #007acc;
+  --bg: #1e1e1e;
+  --fg: #d4d4d4;
+}
+
+body {
+  font-family: system-ui;
+  background: var(--bg);
+  color: var(--fg);
+  margin: 0;
+  padding: 0;
+}`
+    };
+
+    let files = new Map();
+    try {
+      const saved = localStorage.getItem('vscode-ish-files');
+      files = saved ? new Map(Object.entries(JSON.parse(saved))) : new Map(Object.entries(defaultFiles));
+    } catch {
+      files = new Map(Object.entries(defaultFiles));
+    }
+
+    let currentFile = 'app.js', dirty = false, currentLine = 1;
+    let termHistory = [], termHistoryIndex = -1;
+
+    function saveToStorage() {
+      try { localStorage.setItem('vscode-ish-files', JSON.stringify(Object.fromEntries(files))); } 
+      catch (e) { console.error(e); }
+    }
+
+    function setStatus(msg) {
+      statusMsg.textContent = msg;
+      clearTimeout(setStatus._t);
+      setStatus._t = setTimeout(() => statusMsg.textContent = dirty ? 'Unsaved' : 'Ready', 1200);
+    }
+
+    function setDirty(isDirty) {
+      dirty = isDirty;
+      updateTabState();
+      titleText.textContent = isDirty ? `● ${currentFile}` : currentFile;
+    }
+
+    // [Rest of JavaScript - tokenizer, highlighting, etc. - keeping previous implementation]
+    function tokenize(code) {
+      const tokens = [], KEYWORDS = ['const','let','var','function','return','if','else','for','while','break','continue','class','new','try','catch','throw','import','from','export','default','async','await'], TYPES = ['String','Number','Boolean','Object','Array','Map','Set','Promise'];
+      let i = 0;
+      while (i < code.length) {
+        const char = code[i];
+        if (code.substr(i,2)==='/*') { const end=code.indexOf('*/',i+2),len=end===-1?code.length-i:end-i+2; tokens.push({type:'comment',value:code.substr(i,len)}); i+=len; continue; }
+        if (code.substr(i,2)==='//') { const end=code.indexOf('\n',i),len=end===-1?code.length-i:end-i; tokens.push({type:'comment',value:code.substr(i,len)}); i+=len; continue; }
+        if (char==='"'||char==="'"||char==='`') { let j=i+1,escaped=false; while(j<code.length) { if(escaped) {escaped=false;j++;continue;} if(code[j]==='\\') {escaped=true;j++;continue;} if(code[j]===char) {j++;break;} j++; } tokens.push({type:'string',value:code.substring(i,j)}); i=j; continue; }
+        if (/\d/.test(char)) { let j=i; while(j<code.length&&/[\d.]/.test(code[j]))j++; tokens.push({type:'number',value:code.substring(i,j)}); i=j; continue; }
+        if (/[a-zA-Z_$]/.test(char)) { let j=i; while(j<code.length&&/[a-zA-Z0-9_$]/.test(code[j]))j++; const word=code.substring(i,j); let k=j; while(k<code.length&&/\s/.test(code[k]))k++; const isFunc=code[k]==='('; let type='plain'; if(KEYWORDS.includes(word))type='keyword'; else if(TYPES.includes(word))type='type'; else if(isFunc)type='function'; tokens.push({type,value:word}); i=j; continue; }
+        tokens.push({type:'plain',value:char}); i++;
+      }
+      return tokens;
+    }
+
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function highlight(code,ln) {
+      const tokens=tokenize(code);
+      const lines=[];
+      let lineTokens=[];
+      let lineNum=1;
+      
+      for(const token of tokens) {
+        const parts=token.value.split('\n');
+        for(let i=0;i<parts.length;i++) {
+          if(i>0) {
+            // End of line - push accumulated tokens
+            const html=lineTokens.join('');
+            const isCur=lineNum===ln;
+            lines.push(`<span class="line${isCur?' current-line':''}">${html||' '}</span>`);
+            lineTokens=[];
+            lineNum++;
+          }
+          if(parts[i]) {
+            const cls=token.type==='keyword'?'tok-k':
+                      token.type==='string'?'tok-s':
+                      token.type==='number'?'tok-n':
+                      token.type==='comment'?'tok-c':
+                      token.type==='function'?'tok-f':
+                      token.type==='type'?'tok-t':'';
+            // Only wrap if it needs styling
+            if(cls) {
+              lineTokens.push(`<span class="${cls}">${escapeHtml(parts[i])}</span>`);
+            } else {
+              lineTokens.push(escapeHtml(parts[i]));
+            }
+          }
+        }
+      }
+      
+      // Don't forget the last line
+      if(lineTokens.length>0||lines.length===0) {
+        const html=lineTokens.join('');
+        const isCur=lineNum===ln;
+        lines.push(`<span class="line${isCur?' current-line':''}">${html||' '}</span>`);
+      }
+      
+      return lines.join('');
+    }
+
+    function syncGutter() { const lines=ta.value.split('\n').length; gutter.innerHTML=''; for(let i=1;i<=lines;i++) { const d=document.createElement('div'); d.textContent=i; if(i===currentLine)d.className='current-line'; gutter.appendChild(d); }}
+    function syncScroll() { gutter.scrollTop=editor.scrollTop; }
+    function updateCursorStatus() { const idx=ta.selectionStart,before=ta.value.slice(0,idx),ln=before.split('\n').length,col=before.length-before.lastIndexOf('\n'); statusPos.textContent=`Ln ${ln}, Col ${col}`; if(currentLine!==ln) {currentLine=ln;syncHighlightAndGutter();}}
+    function syncHighlightAndGutter() { syncGutter(); hl.innerHTML=highlight(ta.value,currentLine); updateCursorStatus(); }
+
+    let inputTimeout;
+    ta.addEventListener('input',()=>{clearTimeout(inputTimeout);inputTimeout=setTimeout(()=>{syncHighlightAndGutter();setDirty(true);},50);});
+    editor.addEventListener('scroll',syncScroll);
+    ta.addEventListener('click',updateCursorStatus);
+    ta.addEventListener('keyup',updateCursorStatus);
+    ta.addEventListener('keydown',(e)=>{
+      if(e.key==='Tab') {e.preventDefault();const start=ta.selectionStart,end=ta.selectionEnd;ta.value=ta.value.slice(0,start)+'  '+ta.value.slice(end);ta.selectionStart=ta.selectionEnd=start+2;syncHighlightAndGutter();setDirty(true);}
+      if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s') {e.preventDefault();files.set(currentFile,ta.value);setDirty(false);saveToStorage();setStatus('Saved');}
+    });
+
+    function renderTabs() { tabs.innerHTML=''; [...files.keys()].forEach(file=>{const tab=document.createElement('div');tab.className='tab'+(file===currentFile?' active':'');tab.dataset.file=file;const isDirty=file===currentFile&&dirty,icon=getIcon(file);const fileIcon=isDirty?'<span class="dot-unsaved"></span>':iconHTML(icon);tab.innerHTML=`${fileIcon}<span class="name">${file}</span>${iconHTML('close','close')}`;tabs.appendChild(tab);}); }
+    function updateTabState() { renderTabs(); }
+
+    tabs.addEventListener('click',(e)=>{const tab=e.target.closest('.tab');if(!tab)return;if(e.target.closest('.close')) {e.stopPropagation();const file=tab.dataset.file;if(file===currentFile&&dirty&&!confirm(`Close ${file}?`))return;files.delete(file);saveToStorage();if(file===currentFile) {const remaining=[...files.keys()];if(remaining.length>0)openFile(remaining[0]);else{files.set('untitled.txt','');openFile('untitled.txt');}}renderTabs();renderTree();return;}openFile(tab.dataset.file);});
+
+    function renderTree(view='explorer') { tree.innerHTML='';sidebarTitle.textContent=view.toUpperCase();if(view==='explorer') {[...files.keys()].forEach(file=>{const row=document.createElement('div');row.className='item'+(file===currentFile?' active':'');const icon=getIcon(file);row.innerHTML=`${iconHTML(icon)}<span>${file}</span>`;row.onclick=()=>openFile(file);tree.appendChild(row);});}else{tree.innerHTML=`<div class="term-dim" style="padding:6px">(${view}) Placeholder</div>`;}}
+
+    function openFile(file) { if(dirty){files.set(currentFile,ta.value);saveToStorage();setDirty(false);} currentFile=file;statusFile.textContent=file;ta.value=files.get(file)??'';currentLine=1;syncHighlightAndGutter();renderTabs();renderTree();setStatus(`Opened ${file}`);ta.focus(); }
+
+    document.querySelectorAll('.act[data-view]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.act[data-view]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTree(btn.dataset.view);}));
+    document.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));p.classList.add('active');}));
+    document.getElementById('btnSidebar').onclick=()=>wb.classList.toggle('hide-sidebar');
+    document.getElementById('btnTerminal').onclick=()=>wb.classList.toggle('hide-panel');
+    document.getElementById('btnSidebarClose').onclick=()=>wb.classList.add('hide-sidebar');
+    document.getElementById('btnPanelClose').onclick=()=>wb.classList.add('hide-panel');
+    btnChat.onclick=()=>wb.classList.toggle('hide-auxiliary');
+    document.getElementById('btnAuxClose').onclick=()=>wb.classList.add('hide-auxiliary');
+
+    const commands=[
+      {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
+      {label:'View: Toggle Panel',icon:'terminal',run:()=>wb.classList.toggle('hide-panel'),kbd:'Ctrl+`'},
+      {label:'File: Save',icon:'file',run:()=>{files.set(currentFile,ta.value);setDirty(false);saveToStorage();setStatus('Saved');},kbd:'Ctrl+S'},
+      {label:'File: New File',icon:'file',run:()=>{const name=prompt('File name:','untitled.txt');if(name&&!files.has(name)){files.set(name,'');saveToStorage();openFile(name);}}},
+      {label:'Terminal: Clear',icon:'terminal',run:()=>{termOut.innerHTML='';termPrint('Cleared','term-dim');}},
+      {label:'Storage: Reset',icon:'close',run:()=>{if(confirm('Clear all?')){localStorage.removeItem('vscode-ish-files');location.reload();}}},
+      {label:'Theme: Apply Dark+',icon:'info',run:()=>{applyWorkbenchTheme({'titleBar.activeBackground':'#1f1f1f','activityBar.background':'#252526','sideBar.background':'#252526','editor.background':'#1e1e1e','panel.background':'#1b1b1b','statusBar.background':'#007acc','tab.activeBackground':'#1e1e1e','tab.activeBorderTop':'#007acc'});setStatus('Theme applied');}}
+    ];
+
+    function showPalette(mode='commands') {overlay.classList.add('show');palInput.value='';palInput.dataset.mode=mode;palInput.placeholder=mode==='files'?'Type file name…':'Type command…';renderPaletteList('');palInput.focus();}
+    function hidePalette() {overlay.classList.remove('show');ta.focus();}
+    function renderPaletteList(query) {const mode=palInput.dataset.mode||'commands',q=query.trim().toLowerCase();let items=mode==='files'?[...files.keys()].filter(f=>f.toLowerCase().includes(q)).map(f=>({label:f,icon:getIcon(f),run:()=>openFile(f)})):commands.filter(c=>c.label.toLowerCase().includes(q)).slice(0,12);palList.innerHTML='';if(items.length===0) {palList.innerHTML='<div class="pal-item"><div></div><div>No results</div><div></div></div>';return;}items.forEach((it,idx)=>{const row=document.createElement('div');row.className='pal-item'+(idx===0?' active':'');row.innerHTML=`${iconHTML(it.icon||'file')}<div>${it.label}</div><div class="pal-kbd">${it.kbd||'↵'}</div>`;row.onclick=()=>{it.run?.();hidePalette();};palList.appendChild(row);});palList.dataset.count=String(items.length);palList.dataset.selected='0';palList._items=items;}
+    function paletteMove(delta) {const count=Number(palList.dataset.count||'0');if(!count)return;let sel=Math.max(0,Math.min(count-1,Number(palList.dataset.selected||'0')+delta));palList.dataset.selected=String(sel);[...palList.children].forEach((el,i)=>el.classList.toggle('active',i===sel));palList.children[sel]?.scrollIntoView({block:'nearest'});}
+    function paletteRunSelected() {const items=palList._items||[];items[Number(palList.dataset.selected||'0')]?.run?.();hidePalette();}
+
+    document.getElementById('btnPalette').onclick=()=>showPalette('commands');
+    document.getElementById('btnQuickOpen').onclick=()=>showPalette('files');
+    overlay.addEventListener('mousedown',(e)=>{if(e.target===overlay)hidePalette();});
+    palInput.addEventListener('input',()=>renderPaletteList(palInput.value));
+    palInput.addEventListener('keydown',(e)=>{if(e.key==='Escape'){e.preventDefault();hidePalette();}if(e.key==='ArrowDown'){e.preventDefault();paletteMove(+1);}if(e.key==='ArrowUp'){e.preventDefault();paletteMove(-1);}if(e.key==='Enter'){e.preventDefault();paletteRunSelected();}});
+
+    function termPrint(text,cls='term-line') {const div=document.createElement('div');div.className=`term-line ${cls}`.trim();div.textContent=text;termOut.appendChild(div);termOut.scrollTop=termOut.scrollHeight;}
+    function runTerminalCommand(raw) {const line=raw.trim();if(!line)return;if(termHistory[termHistory.length-1]!==line)termHistory.push(line);termHistoryIndex=termHistory.length;termPrint(`$ ${line}`,'term-dim');const [cmd,...args]=line.split(' ');switch(cmd) {case 'help':termPrint('help, clear, echo, ls, cat, open, new, save','term-ok');termPrint('Use ↑/↓ for history','term-dim');break;case 'clear':termOut.innerHTML='';break;case 'echo':termPrint(args.join(' '));break;case 'ls':[...files.keys()].forEach(f=>termPrint(f));break;case 'cat':const f=args[0];if(!f||!files.has(f))termPrint(`No file: ${f||''}`,'term-err');else termPrint(files.get(f),'term-dim');break;case 'open':const of=args[0];if(!of||!files.has(of))termPrint(`No file: ${of||''}`,'term-err');else{openFile(of);termPrint(`Opened ${of}`,'term-ok');}break;case 'new':const nf=args[0];if(!nf)termPrint('Usage: new <filename>','term-err');else if(files.has(nf))termPrint(`Exists: ${nf}`,'term-err');else{files.set(nf,'');saveToStorage();openFile(nf);termPrint(`Created ${nf}`,'term-ok');}break;case 'save':files.set(currentFile,ta.value);setDirty(false);saveToStorage();termPrint('Saved','term-ok');break;default:termPrint(`Unknown: ${cmd}`,'term-err');}}
+
+    document.getElementById('runCmd').onclick=()=>{runTerminalCommand(termIn.value);termIn.value='';termIn.focus();};
+    termIn.addEventListener('keydown',(e)=>{if(e.key==='Enter') {e.preventDefault();runTerminalCommand(termIn.value);termIn.value='';}else if(e.key==='ArrowUp') {e.preventDefault();if(termHistoryIndex>0)termIn.value=termHistory[--termHistoryIndex]||'';}else if(e.key==='ArrowDown') {e.preventDefault();if(termHistoryIndex<termHistory.length-1)termIn.value=termHistory[++termHistoryIndex]||'';else{termHistoryIndex=termHistory.length;termIn.value='';}}});
+
+    window.addEventListener('keydown',(e)=>{const isPaletteOpen=overlay.classList.contains('show');if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');return;}if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');return;}});
+
+    // Auxiliary bar resizer + persistence
+    (function setupAuxiliarySizer(){
+      const root = document.documentElement;
+      const LS_KEY = 'auxiliary-w';
+      try {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) root.style.setProperty('--auxiliary-w', saved);
+      } catch {}
+      let startX=0, startW=0, dragging=false;
+      auxResizer.addEventListener('mousedown', (e)=>{
+        dragging=true; startX=e.clientX;
+        const cs=getComputedStyle(root).getPropertyValue('--auxiliary-w').trim();
+        startW=parseInt(cs,10)||360;
+        document.body.style.userSelect='none';
+      });
+      window.addEventListener('mousemove',(e)=>{
+        if(!dragging)return;
+        const dx=e.clientX - startX;
+        const newW=Math.max(220, Math.min(640, startW - dx));
+        root.style.setProperty('--auxiliary-w', newW+'px');
+      });
+      window.addEventListener('mouseup',()=>{
+        if(!dragging)return; dragging=false; document.body.style.userSelect='';
+        try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--auxiliary-w').trim()); } catch {}
+      });
+    })();
+
+    // Minimal chat echo
+    function chatPost(role, text) {
+      const div=document.createElement('div');
+      div.className=`msg ${role}`;
+      div.textContent=text;
+      chatLog.appendChild(div);
+      chatLog.scrollTop=chatLog.scrollHeight;
+    }
+    document.getElementById('chatSend').onclick=()=>{
+      const q=chatInput.value.trim(); if(!q) return;
+      chatPost('user', q);
+      chatInput.value='';
+      setTimeout(()=>chatPost('bot', 'Echo: '+q), 200);
+    };
+    chatInput?.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('chatSend').click(); }});
+
+    // Workbench theme mapper
+    function applyWorkbenchTheme(c) {
+      const map = [
+        ['--titlebar-bg', c['titleBar.activeBackground']],
+        ['--activity-bg', c['activityBar.background']],
+        ['--sidebar-bg', c['sideBar.background']],
+        ['--editor-bg', c['editor.background']],
+        ['--panel-bg', c['panel.background']],
+        ['--status-bg', c['statusBar.background']],
+        ['--tab-active-bg', c['tab.activeBackground']],
+        ['--accent', c['tab.activeBorderTop'] || c['tab.activeBorder']]
+      ];
+      const root = document.documentElement;
+      for (const [k,v] of map) if (v) root.style.setProperty(k, v);
+    }
+
+    renderTree();renderTabs();openFile(currentFile);setDirty(false);
+    termPrint('Terminal ready. Type "help"','term-ok');
+  </script>
+</body>
+</html>

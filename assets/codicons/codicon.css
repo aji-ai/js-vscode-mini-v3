@@ -1,0 +1,31 @@
+/* Minimal self-host hook for VS Code Codicons
+   Place the official codicon.ttf next to this file as codicon.ttf
+   Full CSS (with glyph mappings) is available from:
+   https://github.com/microsoft/vscode-codicons
+*/
+
+@font-face {
+  font-family: "codicon";
+  src: url("./codicon.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.codicon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  font: normal normal normal 16px/1 codicon;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.codicon.codicon-lg { font-size: 20px; width: 20px; height: 20px; }
+
+/* Icon glyph mappings are intentionally omitted to keep this stub small.
+   Once you copy the official codicon.css here, icons will render automatically.
+   Until then, the app will show SVG fallbacks. */
+
+
