@@ -570,9 +570,27 @@
     $("#swVim").addEventListener("click", () => { state.vimMode = !state.vimMode; applySelections(); });
     $("#swSync").addEventListener("click", () => { state.sync = !state.sync; applySelections(); });
 
+    function requestCloseOnboarding(){
+      try {
+        // Only meaningful when embedded in the main workbench iframe
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: "vscode-mini:onboarding:close" }, "*");
+          return true;
+        }
+      } catch {}
+      return false;
+    }
+
     // Navigation
     $("#btnContinue").addEventListener("click", () => goto("start"));
-    $("#pillAction").addEventListener("click", () => goto(state.step === "setup" ? "start" : "setup"));
+    // “Finish Setup” should exit onboarding when you're on the final screen.
+    $("#pillAction").addEventListener("click", () => {
+      if(state.step === "start") {
+        if(!requestCloseOnboarding()) goto("setup");
+        return;
+      }
+      goto("start");
+    });
     $("#btnBack").addEventListener("click", () => goto("setup"));
     $("#choiceBack").addEventListener("click", (e) => { if(e.target.tagName !== "BUTTON") goto("setup"); });
     $("#btnGetStarted").addEventListener("click", () => {
@@ -584,9 +602,18 @@
     // Keyboard nicety
     window.addEventListener("keydown", (e) => {
       if((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        goto(state.step === "setup" ? "start" : "setup");
+        if(state.step === "start") {
+          if(!requestCloseOnboarding()) goto("setup");
+          return;
+        }
+        goto("start");
       }
-      if(e.key === "Escape" && state.step === "start") goto("setup");
+      if(e.key === "Escape") {
+        // When embedded, Escape should exit onboarding entirely.
+        if(requestCloseOnboarding()) return;
+        // Standalone behavior (non-embedded): keep original back behavior.
+        if(state.step === "start") goto("setup");
+      }
     });
 
     applySelections();

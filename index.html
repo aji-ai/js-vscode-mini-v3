@@ -433,9 +433,35 @@
     }
     .updates-body code { font-family: var(--font-mono); }
 
+    /* Onboarding (full-screen iframe overlay) */
+    .onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 100;
+      transition: opacity 160ms ease, visibility 0s linear 160ms;
+    }
+    .onboarding-overlay.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 160ms ease;
+    }
+    .onboarding-frame {
+      width: 100vw;
+      height: 100vh;
+      border: 0;
+      display: block;
+      background: transparent;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .updates-overlay,
-      .updates-modal {
+      .updates-modal,
+      .onboarding-overlay {
         transition: none !important;
       }
     }
@@ -1483,6 +1509,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Onboarding (full screen) -->
+  <div class="onboarding-overlay" id="onboardingOverlay" aria-hidden="true">
+    <iframe class="onboarding-frame" id="onboardingFrame" title="Welcome to VS Code" src="about:blank"></iframe>
+  </div>
   <!-- Hidden theme file picker -->
   <input type="file" id="themeFile" accept=".json,.jsonc,application/json" style="display:none" />
 
@@ -1517,6 +1548,8 @@
     const btnUpdates = document.getElementById('btnUpdates');
     const updatesOverlay = document.getElementById('updatesOverlay');
     const btnUpdatesClose = document.getElementById('btnUpdatesClose');
+    const onboardingOverlay = document.getElementById('onboardingOverlay');
+    const onboardingFrame = document.getElementById('onboardingFrame');
     const updatesBody = document.getElementById('updatesBody');
     const chatOverlay = document.getElementById('chatOverlay');
     const chatProjName = document.getElementById('chatProjName');
@@ -2233,6 +2266,30 @@ body {
       refreshEditorSoon();
     };
 
+    // Onboarding overlay
+    function openOnboarding() {
+      if (!onboardingOverlay || !onboardingFrame) return;
+      onboardingOverlay.classList.add('show');
+      onboardingOverlay.setAttribute('aria-hidden', 'false');
+      // Force a fresh load so the flow starts at the beginning each time
+      onboardingFrame.src = './onboarding.html';
+    }
+    function closeOnboarding() {
+      if (!onboardingOverlay || !onboardingFrame) return;
+      onboardingOverlay.classList.remove('show');
+      onboardingOverlay.setAttribute('aria-hidden', 'true');
+      // Stop animation loops inside the iframe after fade-out
+      window.setTimeout(() => {
+        if (!onboardingOverlay.classList.contains('show')) onboardingFrame.src = 'about:blank';
+      }, 200);
+      try { ta?.focus?.(); } catch {}
+    }
+
+    window.addEventListener('message', (e) => {
+      const t = e?.data?.type;
+      if (t === 'vscode-mini:onboarding:close') closeOnboarding();
+    });
+
     const commands=[
       {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
       {label:'View: Toggle Panel',icon:'terminal',run:()=>wb.classList.toggle('hide-panel'),kbd:'Ctrl+`'},
@@ -2241,6 +2298,7 @@ body {
       {label:'File: New File',icon:'file',run:()=>{const name=prompt('File name:','untitled.txt');if(name&&!files.has(name)){files.set(name,'');saveToStorage();openFile(name);}}},
       {label:'Terminal: Clear',icon:'terminal',run:()=>{termOut.innerHTML='';termPrint('Cleared','term-dim');}},
       {label:'Storage: Reset',icon:'close',run:()=>{if(confirm('Clear all?')){localStorage.removeItem('vscode-ish-files');location.reload();}}},
+      {label:'Help: Start Onboarding',icon:'vscode',run:()=>openOnboarding()},
       {label:'Theme: Apply Dark+',icon:'info',run:()=>{applyWorkbenchTheme({'titleBar.activeBackground':'#1f1f1f','activityBar.background':'#252526','sideBar.background':'#252526','editor.background':'#1e1e1e','panel.background':'#1b1b1b','statusBar.background':'#007acc','tab.activeBackground':'#1e1e1e','tab.activeBorderTop':'#007acc'});setStatus('Theme applied');}},
       {label:'Theme: Import from JSON…',icon:'file',run:()=>{themeFile.value='';themeFile.click();}},
       {label:'Project: Load Example (assets/default)',icon:'files',run:async()=>{await loadDefaultProjectFromAssets(); currentFile='README.md'; if(!files.has(currentFile)){const f=[...files.keys()][0]; if(f) currentFile=f;} renderTree(); renderTabs(); openFile(currentFile); setDirty(false); setStatus('Loaded example project');}},
@@ -2323,7 +2381,19 @@ body {
 
     termIn.addEventListener('keydown',(e)=>{if(e.key==='Enter') {e.preventDefault();runTerminalCommand(termIn.value);termIn.value='';}else if(e.key==='ArrowUp') {e.preventDefault();if(termHistoryIndex>0)termIn.value=termHistory[--termHistoryIndex]||'';}else if(e.key==='ArrowDown') {e.preventDefault();if(termHistoryIndex<termHistory.length-1)termIn.value=termHistory[++termHistoryIndex]||'';else{termHistoryIndex=termHistory.length;termIn.value='';}}});
 
-    window.addEventListener('keydown',(e)=>{const isPaletteOpen=overlay.classList.contains('show');if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();return;}if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();return;}});
+    window.addEventListener('keydown',(e)=>{
+      const isOnboardingOpen = onboardingOverlay?.classList?.contains('show');
+      if (isOnboardingOpen) {
+        if (e.key === 'Escape') { e.preventDefault(); closeOnboarding(); }
+        return;
+      }
+      const isPaletteOpen=overlay.classList.contains('show');
+      if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}
+      if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}
+      if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}
+      if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();return;}
+      if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();return;}
+    });
     window.addEventListener('resize', refreshEditorSoon);
 
     // Auxiliary bar resizer + persistence
