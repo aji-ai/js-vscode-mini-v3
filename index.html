@@ -409,9 +409,23 @@
       color: var(--activity-fg, var(--muted));
       cursor: pointer;
       overflow: visible;
+      position: relative;
+      border-radius: 0;
     }
     .act .icon-lg { margin: 0 2px; }
-    .act.active { color: var(--activity-active-fg, #fff); background: rgba(255,255,255,.06); outline: 1px solid rgba(255,255,255,.08); }
+    .act.active {
+      color: var(--activity-active-fg, #fff);
+      background: transparent;
+    }
+    .act.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+    }
     .act:hover { background: rgba(255,255,255,.05); color: var(--activity-active-fg, #fff); }
 
     .sidebar {
@@ -1891,10 +1905,22 @@ body {
     }
     document.getElementById('btnSidebar').onclick=()=>{wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();};
     document.getElementById('btnTerminal').onclick=()=>{wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnSidebarClose').onclick=()=>wb.classList.add('hide-sidebar');
-    document.getElementById('btnPanelClose').onclick=()=>wb.classList.add('hide-panel');
+    document.getElementById('btnSidebarClose').onclick=()=>{
+      wb.classList.add('hide-sidebar');
+      syncToggleButtons();
+      refreshEditorSoon();
+    };
+    document.getElementById('btnPanelClose').onclick=()=>{
+      wb.classList.add('hide-panel');
+      syncToggleButtons();
+      refreshEditorSoon();
+    };
     btnChat.onclick=()=>{wb.classList.toggle('hide-auxiliary');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnAuxClose').onclick=()=>wb.classList.add('hide-auxiliary');
+    document.getElementById('btnAuxClose').onclick=()=>{
+      wb.classList.add('hide-auxiliary');
+      syncToggleButtons();
+      refreshEditorSoon();
+    };
 
     const commands=[
       {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
