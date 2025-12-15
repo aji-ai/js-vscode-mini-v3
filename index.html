@@ -85,6 +85,10 @@
       --sidebar-w: 280px;
       --titlebar-h: 34px;
       --statusbar-h: 22px;
+
+      /* Panel sizing (terminal) */
+      --panel-h: 260px;
+      --splitter-h: 1px;
     }
 
     html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: var(--fs-ui); }
@@ -466,19 +470,20 @@
       min-height: 0;
       min-width: 0;
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr var(--splitter-h) var(--panel-h);
       background: var(--editor-bg);
     }
     /* Pin content children to fixed rows so hiding tabs doesn't reflow editor/panel rows */
     .content > .tabs { grid-row: 1; }
     .content > .editor-wrap { grid-row: 2; }
-    .content > .panel { grid-row: 3; }
+    .content > .panel-resizer { grid-row: 3; }
+    .content > .panel { grid-row: 4; }
     /* If no file is open: keep editor area visible and keep terminal at a stable height (not 50/50). */
     :root { --panel-empty-h: 260px; }
     .content.no-file { 
-      grid-template-rows: 0px minmax(200px, 1fr) minmax(180px, var(--panel-empty-h)); 
+      grid-template-rows: 0px minmax(200px, 1fr) var(--splitter-h) var(--panel-h); 
     }
-    .hide-panel .content.no-file { grid-template-rows: 0px 1fr 0px; }
+    .hide-panel .content.no-file { grid-template-rows: 0px 1fr 0px 0px; }
 
     /* IMPORTANT: don't `display:none` the tabs in empty mode, or the grid auto-placement
        will move `.editor-wrap` into row 1 (0px) and the panel will take the full height. */
@@ -493,6 +498,14 @@
     }
     .content.no-file .tabs > * { display: none; }
     .content.no-file .gutter { display: none; }
+
+    .panel-resizer {
+      height: var(--splitter-h);
+      background: var(--border);
+      cursor: row-resize;
+      user-select: none;
+    }
+    .hide-panel .panel-resizer { display: none !important; }
 
     .tabs {
       display: flex; gap: 1px;
@@ -941,7 +954,7 @@
     .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
     .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
     .hide-panel .panel { display: none !important; }
-    .hide-panel .content { grid-template-rows: auto 1fr 0px; }
+    .hide-panel .content { grid-template-rows: auto 1fr 0px 0px; }
     .hide-auxiliary .auxiliarybar, .hide-auxiliary .resizer-x { display: none !important; }
     .hide-auxiliary .main { grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) 0px 0px; }
     /* Resolve combined hide states to avoid leftover reserved widths */
@@ -1157,6 +1170,8 @@
           </div>
         </div>
 
+        <div class="panel-resizer" id="panelResizer" aria-hidden="true"></div>
+
         <div class="panel">
           <div class="panel-tabs">
             <div class="panel-left">
@@ -1342,6 +1357,7 @@
     const btnChat = document.getElementById('btnChat');
     const aux = document.getElementById('aux');
     const auxResizer = document.getElementById('auxResizer');
+    const panelResizer = document.getElementById('panelResizer');
     const chatLog = document.getElementById('chatLog');
     const auxEmptyState = document.getElementById('auxEmpty');
     const chatInput = document.getElementById('chatInput');
@@ -2039,6 +2055,52 @@ body {
         try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--auxiliary-w').trim()); } catch {}
         refreshEditorSoon();
       });
+    })();
+
+    // Terminal panel resizer (thin splitter, no persistence)
+    (function setupPanelSizer(){
+      if (!panelResizer || !contentEl) return;
+      const root = document.documentElement;
+      let dragging = false;
+      let bottom = 0;
+      const minH = 120; // keep terminal usable
+      let maxH = 520;
+
+      function recompute() {
+        const r = contentEl.getBoundingClientRect();
+        bottom = r.bottom;
+        // don't let the panel take more than ~75% of the work area
+        maxH = Math.max(minH, Math.floor(r.height * 0.75));
+      }
+
+      function setH(px) {
+        const v = Math.max(minH, Math.min(maxH, Math.round(px)));
+        root.style.setProperty('--panel-h', v + 'px');
+        refreshEditorSoon();
+      }
+
+      panelResizer.addEventListener('mousedown', (e)=>{
+        if (wb.classList.contains('hide-panel')) return;
+        dragging = true;
+        recompute();
+        document.body.style.userSelect = 'none';
+        document.body.style.cursor = 'row-resize';
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e)=>{
+        if (!dragging) return;
+        setH(bottom - e.clientY);
+      });
+
+      window.addEventListener('mouseup', ()=>{
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      });
+
+      window.addEventListener('resize', ()=>{ if (dragging) recompute(); });
     })();
 
     // Refresh when the editor area resizes due to layout changes
