@@ -37,8 +37,8 @@
       overflow: visible;
     }
     .icon-lg { 
-      width: 20px; 
-      height: 20px; 
+      width: 16px; 
+      height: 16px; 
       flex-shrink: 0;
       overflow: visible;
     }
@@ -46,7 +46,7 @@
     :root{
       --bg: #1e1e1e;
       --fg: #d4d4d4;
-      --muted: #9aa0a6;
+      --muted: #6b7280;
       --border: #2a2a2a;
       --shadow: rgba(0,0,0,.35);
 
@@ -55,13 +55,13 @@
       --sidebar-bg:#252526;
       --editor-bg:#1e1e1e;
       --panel-bg:#1b1b1b;
-      --status-bg:#007acc;
+      --status-bg:#1f1f1f;
 
       --accent:#007acc;
       --accent-2:#3794ff;
       --danger:#f44747;
 
-      --tab-bg:#2d2d2d;
+      --tab-bg:#1f1f1f;
       --tab-active-bg:#1e1e1e;
 
       /* Extended theming hooks */
@@ -81,7 +81,7 @@
       --fs-code: 13px;
       --lh-code: 1.6;
 
-      --activity-w: 48px;
+      --activity-w: 40px;
       --sidebar-w: 280px;
       --titlebar-h: 34px;
       --statusbar-h: 22px;
@@ -89,6 +89,19 @@
       /* Panel sizing (terminal) */
       --panel-h: 260px;
       --splitter-h: 1px;
+
+      /* Floating panel system */
+      --panel-width: 280px;
+      --panel-spacing: 8px;
+      --panel-radius: 8px;
+      --panel-minimized-w: 50px;
+      --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      --panel-bg-floating: rgba(37, 37, 38, 0.95);
+      --glass-blur: 12px;
+
+      /* Dynamic panel widths (set by JS) */
+      --primary-width: 280px;
+      --secondary-width: 360px;
     }
 
     html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: var(--fs-ui); }
@@ -106,7 +119,7 @@
       width: 16px;
       height: 16px;
     }
-    .codicon.codicon-lg { font-size: 20px; width: 20px; height: 20px; }
+    .codicon.codicon-lg { font-size: 16px; width: 16px; height: 16px; }
     /* Always prefer Codicons; suppress any legacy SVG fallbacks */
     .fallback-icon { display: none !important; }
 
@@ -149,7 +162,7 @@
     }
 
     .title-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .title-center { justify-self: center; display: flex; align-items: center; gap: 6px; }
+    .title-center { justify-self: center; display: flex; align-items: center; gap: 12px; }
     .window-dots { display: flex; gap: 6px; }
     .dot { width: 10px; height: 10px; border-radius: 999px; background: #555; }
     .dot.red { background: #ff5f57; }
@@ -157,7 +170,9 @@
     .dot.green { background: #28c840; }
     .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--titlebar-fg, var(--muted)); }
     .title-actions { display: flex; gap: 6px; align-items: center; }
-    .titlebar .btn { color: var(--titlebar-fg, var(--fg)); }
+    .titlebar .btn { color: var(--titlebar-fg, var(--fg)); border: none; background: transparent; }
+    .titlebar .btn:hover { background: rgba(255,255,255,.1); }
+    .titlebar .btn:focus { outline: none; box-shadow: none; }
 
     /* Command Center (project quick palette) */
     .project-quick {
@@ -293,9 +308,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 2px 10px 6px 10px;
       border: none;
-      background: var(--panel-bg, #1b1b1b);
+      background: var(--sidebar-bg);
     }
     .chat-composer .copilot-pill,
     .aux-chat-bar .copilot-pill {
@@ -509,23 +524,25 @@
 
     .main {
       display: grid;
-      grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w);
-      /* Critical: give the grid a definite row size so `.content` can size its 1fr tracks
-         even when the editor is "empty" (absolute-positioned empty state has no intrinsic height). */
+      /* Floating panels are position:absolute, content takes full width */
+      grid-template-columns: 1fr;
       grid-template-rows: minmax(0, 1fr);
       height: 100%;
       min-height: 0;
       min-width: 0;
       gap: 0;
+      position: relative; /* Container for absolute panels */
     }
-    /* Pin children to fixed columns so hiding sidebar doesn't shift placement */
-    .main > .activitybar { grid-column: 1; }
-    .main > .sidebar { grid-column: 2; }
-    .main > .content { grid-column: 3; }
-    .main > .resizer-x { grid-column: 4; }
-    .main > .auxiliarybar { grid-column: 5; }
+    /* Activity bar is now inside the sidebar panel */
+    .main > .activitybar { display: none; }
+    .main > .content { grid-column: 1; }
+    /* Floating panels no longer in grid flow */
+    .main > .sidebar,
+    .main > .auxiliarybar { grid-column: unset; }
+    .main > .resizer-y,
+    .main > .resizer-x { display: none; /* Hide legacy resizers for now */ }
 
-    :root { --auxiliary-w: 360px; --aux-divider-w: 4px; }
+    :root { --auxiliary-w: 360px; --aux-divider-w: 4px; --sidebar-divider-w: 1px; }
 
     .activitybar {
       background: var(--activity-bg);
@@ -560,8 +577,8 @@
       background: transparent;
     }
     .activity-top .act {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
     }
     .activity-top .act.active::before { display: none; }
     .activity-top .act.active::after {
@@ -574,7 +591,7 @@
       background: var(--accent);
     }
     .act {
-      width: 34px; height: 34px;
+      width: 28px; height: 28px;
       border-radius: 8px;
       display: flex;
       align-items: center;
@@ -599,26 +616,238 @@
       width: 3px;
       background: var(--accent);
     }
-    .act:hover { background: rgba(255,255,255,.05); color: var(--activity-active-fg, #fff); }
+    .act:hover { background: rgba(255,255,255,.05); color: var(--activity-active-fg, #fff); border-radius: 8px; }
 
-    .sidebar {
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
+    /* Floating panel base styles */
+    .sidebar,
+    .auxiliarybar {
+      position: absolute;
+      top: var(--panel-spacing);
+      bottom: var(--panel-spacing);
+      background: var(--panel-bg-floating);
+      backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--border);
+      border-radius: var(--panel-radius);
+      box-shadow: var(--panel-shadow);
       min-height: 0;
       min-width: 0;
-      display: grid;
-      /* host (optional), header, body */
-      grid-template-rows: auto auto 1fr;
-      overflow: visible;
+      z-index: 20;
+      transition: width 0.25s ease, left 0.25s ease, right 0.25s ease, 
+                  border-radius 0.25s ease, opacity 0.25s ease;
+      overflow: hidden;
     }
+
+    /* Sidebar has activity bar + main content side by side */
+    .sidebar {
+      left: var(--panel-spacing);
+      width: var(--panel-width);
+      display: grid;
+      grid-template-columns: var(--activity-w) 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .sidebar-activity {
+      background: var(--activity-bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+      border-radius: var(--panel-radius) 0 0 var(--panel-radius);
+    }
+
+    .sidebar-main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .auxiliarybar {
+      right: var(--panel-spacing);
+      width: var(--auxiliary-w, 360px);
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+    }
+
+    /* Panel header with controls */
+    .panel-header {
+      padding: 0 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      height: 34px;
+      min-height: 34px;
+    }
+
+    .panel-title {
+      letter-spacing: .06em;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .panel-controls {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .panel-header:hover .panel-controls,
+    .sidebar:focus-within .panel-controls,
+    .auxiliarybar:focus-within .panel-controls {
+      opacity: 1;
+    }
+
+    .panel-controls .btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel-controls .btn:hover {
+      background: rgba(255,255,255,.08);
+      color: var(--fg);
+    }
+
+    /* Legacy sidebar-header support */
     .sidebar-header {
-      padding: 10px 10px 8px;
+      padding: 0 10px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
+      height: 34px;
+      min-height: 34px;
     }
-    .sidebar-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .sidebar-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
     .sidebar-body { padding: 8px; overflow-x: visible; overflow-y: auto; min-height: 0; }
+
+    /* ===== PANEL STATES ===== */
+
+    /* Minimized/Docked state - dock to edge, show only activity bar */
+    .sidebar.minimized {
+      width: var(--activity-w);
+      left: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      grid-template-columns: 1fr; /* Only show activity bar */
+    }
+
+    .sidebar.minimized .sidebar-main {
+      display: none;
+    }
+
+    .sidebar.minimized .sidebar-activity {
+      border-radius: 0;
+      border-right: none;
+    }
+
+    .auxiliarybar.minimized {
+      width: var(--panel-minimized-w);
+      right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    /* Hide content when minimized */
+    .auxiliarybar.minimized .aux-body,
+    .auxiliarybar.minimized .aux-input,
+    .auxiliarybar.minimized .aux-chat-bar,
+    .auxiliarybar.minimized .panel-title,
+    .auxiliarybar.minimized .panel-controls {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Hover-expanded state - expand while staying docked */
+    .sidebar.minimized:hover,
+    .sidebar.minimized.hover-expanded {
+      width: var(--panel-width);
+      left: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      grid-template-columns: var(--activity-w) 1fr;
+    }
+
+    .sidebar.minimized:hover .sidebar-main,
+    .sidebar.minimized.hover-expanded .sidebar-main {
+      display: grid;
+    }
+
+    .sidebar.minimized:hover .sidebar-activity,
+    .sidebar.minimized.hover-expanded .sidebar-activity {
+      border-radius: 0;
+      border-right: 1px solid var(--border);
+    }
+
+    .auxiliarybar.minimized:hover,
+    .auxiliarybar.minimized.hover-expanded {
+      width: var(--auxiliary-w, 360px);
+      right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    /* Show content on hover when minimized */
+    .auxiliarybar.minimized:hover .aux-body,
+    .auxiliarybar.minimized:hover .aux-input,
+    .auxiliarybar.minimized:hover .aux-chat-bar,
+    .auxiliarybar.minimized:hover .panel-title,
+    .auxiliarybar.minimized:hover .panel-controls,
+    .auxiliarybar.minimized.hover-expanded .aux-body,
+    .auxiliarybar.minimized.hover-expanded .aux-input,
+    .auxiliarybar.minimized.hover-expanded .aux-chat-bar,
+    .auxiliarybar.minimized.hover-expanded .panel-title,
+    .auxiliarybar.minimized.hover-expanded .panel-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.15s ease 0.1s;
+    }
+
+    /* Hidden state */
+    .sidebar.panel-hidden,
+    .auxiliarybar.panel-hidden {
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+    }
+
+    .sidebar.panel-hidden {
+      left: calc(-1 * var(--panel-width));
+    }
+
+    .auxiliarybar.panel-hidden {
+      right: calc(-1 * var(--auxiliary-w, 360px));
+    }
+
+    /* Fullscreen/Maximized state */
+    .sidebar.fullscreen,
+    .auxiliarybar.fullscreen {
+      width: calc(100% - var(--panel-spacing) * 2);
+      z-index: 25;
+    }
+
+    .sidebar.fullscreen {
+      left: var(--panel-spacing);
+      border-radius: var(--panel-radius);
+    }
+
+    .auxiliarybar.fullscreen {
+      right: var(--panel-spacing);
+      border-radius: var(--panel-radius);
+    }
 
     .tree { font-family: var(--font-ui); font-size: var(--fs-ui); line-height: 1.8; }
     .tree .item {
@@ -641,6 +870,10 @@
       display: grid;
       grid-template-rows: auto 1fr var(--splitter-h) var(--panel-h);
       background: var(--editor-bg);
+      /* Padding to clear floating panels - panel width + spacing on each side */
+      padding-left: calc(var(--primary-width) + var(--panel-spacing));
+      padding-right: calc(var(--secondary-width) + var(--panel-spacing));
+      transition: padding 0.25s ease;
     }
     /* Pin content children to fixed rows so hiding tabs doesn't reflow editor/panel rows */
     .content > .tabs { grid-row: 1; }
@@ -678,12 +911,13 @@
 
     .tabs {
       display: flex; gap: 1px;
-      background: var(--border);
+      background: var(--titlebar-bg);
       border-bottom: 1px solid var(--border);
       user-select: none;
       overflow-x: auto;
       min-height: 34px;
       align-items: stretch;
+      padding-top: 8px;
     }
     .tab {
       background: var(--tab-bg);
@@ -959,14 +1193,17 @@
     .sug-row.active { background: rgba(0,122,204,.18); }
 
     .statusbar {
-      background: var(--status-bg);
+      /* Match the surface directly above: panel when visible, editor when panel is hidden */
+      background: var(--panel-bg);
+      border-top: 1px solid var(--border);
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
       padding: 0 10px;
-      color: var(--status-fg, white);
+      color: var(--muted);
       user-select: none;
     }
+    .hide-panel .statusbar { background: var(--editor-bg); }
     .status-left, .status-right { display:flex; gap: 10px; align-items:center; }
     .status-item { display: flex; align-items: center; gap: 4px; }
 
@@ -1045,33 +1282,30 @@
       text-align: center;
     }
 
-    /* Auxiliary (Chat) Bar */
+    /* Auxiliary (Chat) Bar - uses shared floating styles above */
     .auxiliarybar {
-      background: var(--sidebar-bg);
-      border-left: 1px solid var(--border);
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      min-width: 220px;
-      /* Allow grid to shrink properly and avoid extra right blank area */
-      width: 100%;
-      min-width: 0;
-      overflow: hidden;
+      grid-template-rows: auto 1fr auto auto;
     }
     .aux-header {
-      padding: 10px 10px 8px;
+      padding: 0 10px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
+      height: 34px;
+      min-height: 34px;
     }
-    .aux-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .aux-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; }
     .aux-body { padding: 10px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
-    .aux-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
-    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--fg); border-radius: 8px; padding: 8px 10px; outline: none; font-family: var(--font-ui); font-size: 12px; }
+    .aux-input { display: flex; gap: 0; padding: 10px 10px 4px 10px; border-top: 1px solid var(--border); align-items: center; position: relative; }
+    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--fg); border-radius: 8px; padding: 8px 10px 8px 12px; outline: none; font-family: var(--font-ui); font-size: 12px; padding-right: 76px; }
+    .aux-input .btn { position: absolute; right: 16px; margin: 0; }
+    .aux-input #chatMic { right: 46px; }
     .msg { display: inline-flex; max-width: 90%; padding: 8px 10px; border-radius: 8px; }
     .msg.user { align-self: flex-end; background: rgba(0,122,204,.18); border: 1px solid rgba(0,122,204,.25); }
     .msg.bot { align-self: flex-start; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-    .resizer-x { width: var(--aux-divider-w); cursor: col-resize; background: transparent; align-self: stretch; }
-    .resizer-x:hover { background: rgba(255,255,255,.06); }
+    .resizer-y { height: auto; width: var(--splitter-h); cursor: col-resize; background: transparent; align-self: stretch; }
+    .resizer-y:hover { background: rgba(255,255,255,.06); }
+    .main > .resizer-y { grid-column: 3; }
 
     .overlay {
       position: fixed;
@@ -1118,18 +1352,24 @@
     .pal-kbd { color: var(--muted); font-size: 11px; }
 
     .hide-activity .activitybar { display: none !important; }
-    .hide-activity .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
-    .hide-sidebar .sidebar { display: none !important; }
-    .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
-    .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
+    .hide-activity .main { grid-template-columns: 0px 1fr; }
+    
     .hide-panel .panel { display: none !important; }
     .hide-panel .content { grid-template-rows: auto 1fr 0px 0px; }
-    .hide-auxiliary .auxiliarybar, .hide-auxiliary .resizer-x { display: none !important; }
-    .hide-auxiliary .main { grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) 0px 0px; }
-    /* Resolve combined hide states to avoid leftover reserved widths */
-    .hide-sidebar.hide-auxiliary .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-auxiliary .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-sidebar.hide-auxiliary .main { grid-template-columns: 0px 0px minmax(0,1fr) 0px 0px; }
+    
+    /* Floating panel visibility is handled by .panel-hidden class and PanelManager */\n    /* These classes update content padding based on panel state */
+    .primary-hidden .content {
+      padding-left: 0;
+    }
+    .secondary-hidden .content {
+      padding-right: 0;
+    }
+    .primary-minimized .content {
+      padding-left: var(--activity-w); /* Activity bar width when docked */
+    }
+    .secondary-minimized .content {
+      padding-right: var(--panel-minimized-w);
+    }
   </style>
 </head>
 <body>
@@ -1225,6 +1465,12 @@
         <div class="title" id="titleText">VS Code-ish</div>
       </div>
       <div class="title-center">
+        <button class="btn icon" title="Go Back" id="btnNavBack">
+          <i class="codicon codicon-arrow-left"></i>
+        </button>
+        <button class="btn icon" title="Go Forward" id="btnNavForward">
+          <i class="codicon codicon-arrow-right"></i>
+        </button>
         <div class="project-quick" id="projectQuick" title="Show and Run Commands (Ctrl+Shift+P)" tabindex="0" role="button" aria-label="Project Command Center">
           <i class="codicon codicon-search"></i>
           <span class="label" id="projectName">js-embeddings-1</span>
@@ -1256,54 +1502,50 @@
           <svg class="icon fallback-icon"><use href="#icon-info"/></svg>
         </button>
         <button class="btn icon updates-btn" title="Updates" id="btnUpdates" aria-haspopup="dialog" aria-expanded="false">
-          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode.svg" alt="Updates" />
+          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="Updates" />
           <span class="updates-dot" aria-hidden="true"></span>
         </button>
       </div>
     </div>
 
     <div class="main">
-      <div class="activitybar">
-        <div class="act active" data-view="explorer" title="Explorer">
-          <i class="codicon codicon-files codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-files"/></svg>
+      <div class="sidebar" id="sidebar" data-panel-name="primary">
+        <div class="sidebar-activity">
+          <div class="act active" data-view="explorer" title="Explorer">
+            <i class="codicon codicon-files codicon-lg"></i>
+          </div>
+          <div class="act" data-view="search" title="Search">
+            <i class="codicon codicon-search codicon-lg"></i>
+          </div>
+          <div class="act" data-view="scm" title="Source Control">
+            <i class="codicon codicon-source-control codicon-lg"></i>
+          </div>
+          <div class="act" data-view="run" title="Run and Debug">
+            <i class="codicon codicon-debug-alt codicon-lg"></i>
+          </div>
+          <div class="act" data-view="ext" title="Extensions">
+            <i class="codicon codicon-extensions codicon-lg"></i>
+          </div>
+          <div style="flex:1"></div>
+          <div class="act" title="Settings">
+            <i class="codicon codicon-settings-gear codicon-lg"></i>
+          </div>
         </div>
-        <div class="act" data-view="search" title="Search">
-          <i class="codicon codicon-search codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-search"/></svg>
-        </div>
-        <div class="act" data-view="scm" title="Source Control">
-          <i class="codicon codicon-source-control codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-git"/></svg>
-        </div>
-        <div class="act" data-view="run" title="Run and Debug">
-          <i class="codicon codicon-debug-alt codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-debug"/></svg>
-        </div>
-        <div class="act" data-view="ext" title="Extensions">
-          <i class="codicon codicon-extensions codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-extensions"/></svg>
-        </div>
-        <div style="flex:1"></div>
-        <div class="act" title="Settings">
-          <i class="codicon codicon-settings-gear codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-settings"/></svg>
-        </div>
-      </div>
-
-      <div class="sidebar">
-        <div class="activitybar-top-host" id="activityTopHost" aria-hidden="true"></div>
-        <div class="sidebar-header">
-          <div class="sidebar-title" id="sidebarTitle">EXPLORER</div>
-          <button class="btn icon" id="btnSidebarClose">
-            <i class="codicon codicon-close"></i>
-            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-          </button>
-        </div>
-        <div class="sidebar-body">
-          <div class="tree" id="tree"></div>
+        <div class="sidebar-main">
+          <div class="panel-header">
+            <div class="panel-title" id="sidebarTitle">EXPLORER</div>
+            <div class="panel-controls">
+              <button class="btn panel-hide-btn" title="Hide panel"><i class="codicon codicon-eye-closed"></i></button>
+              <button class="btn panel-fullscreen-btn" title="Maximize panel"><i class="codicon codicon-screen-full"></i></button>
+              <button class="btn panel-dock-btn" title="Dock panel"><i class="codicon codicon-layout-sidebar-left-off"></i></button>
+            </div>
+          </div>
+          <div class="sidebar-body">
+            <div class="tree" id="tree"></div>
+          </div>
         </div>
       </div>
+      <div class="resizer-y" id="sidebarResizer"></div>
 
       <div class="content">
         <div class="tabs" id="tabs"></div>
@@ -1353,12 +1595,6 @@
               <div class="pill">Problems</div>
               <div class="pill">Output</div>
             </div>
-            <div class="panel-right">
-              <button class="btn icon" id="btnPanelClose">
-                <i class="codicon codicon-close"></i>
-                <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-              </button>
-            </div>
           </div>
 
           <div class="terminal" id="termOut">
@@ -1374,31 +1610,26 @@
         </div>
       </div>
       <div class="resizer-x" id="auxResizer"></div>
-      <div class="auxiliarybar" id="aux">
-        <div class="aux-header">
-          <div class="aux-title">CHAT</div>
-          <button class="btn icon" id="btnAuxClose">
-            <i class="codicon codicon-close"></i>
-            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-          </button>
+      <div class="auxiliarybar" id="aux" data-panel-name="secondary">
+        <div class="panel-header">
+          <div class="panel-title">CHAT</div>
+          <div class="panel-controls">
+            <button class="btn panel-hide-btn" title="Hide panel"><i class="codicon codicon-eye-closed"></i></button>
+            <button class="btn panel-fullscreen-btn" title="Maximize panel"><i class="codicon codicon-screen-full"></i></button>
+            <button class="btn panel-dock-btn" title="Dock panel"><i class="codicon codicon-layout-sidebar-right-off"></i></button>
+          </div>
         </div>
         <div class="aux-body" id="chatLog">
           <div class="chat-empty-state" id="auxEmpty">
-            <div class="aux-empty-content">
-              <div class="aux-empty-icon">
-                <i class="codicon codicon-chat-sparkle"></i>
-              </div>
-              <div class="aux-empty-copy">
-                Ask anything to get started
-              </div>
-            </div>
           </div>
         </div>
         <div class="aux-input">
           <input id="chatInput" placeholder="Ask something…" />
-          <button class="btn" id="chatSend">
+          <button class="btn icon" id="chatMic" title="Voice input">
+            <i class="codicon codicon-mic"></i>
+          </button>
+          <button class="btn icon" id="chatSend" title="Send">
             <i class="codicon codicon-send"></i>
-            <svg class="icon fallback-icon"><use href="#icon-output"/></svg>
           </button>
         </div>
         <div class="aux-chat-bar">
@@ -1456,7 +1687,7 @@
     <div class="updates-modal" role="dialog" aria-modal="true" aria-label="Updates">
       <div class="updates-header">
         <div class="updates-title">
-          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode.svg" alt="" aria-hidden="true" />
+          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="" aria-hidden="true" />
           <span>Updates</span>
         </div>
         <button class="btn icon" id="btnUpdatesClose" aria-label="Close Updates">
@@ -1560,6 +1791,7 @@
     const btnChat = document.getElementById('btnChat');
     const aux = document.getElementById('aux');
     const auxResizer = document.getElementById('auxResizer');
+    const sidebarResizer = document.getElementById('sidebarResizer');
     const panelResizer = document.getElementById('panelResizer');
     const chatLog = document.getElementById('chatLog');
     const auxEmptyState = document.getElementById('auxEmpty');
@@ -1570,6 +1802,218 @@
     const activityTopHost = document.getElementById('activityTopHost');
     const ACTIVITY_POS_KEY = 'activity-bar-position';
     let activityBarPosition = 'left';
+    const sidebarEl = document.getElementById('sidebar');
+
+    // ===== PANEL MANAGER =====
+    // Manages floating panel states: normal, minimized (docked), hidden, fullscreen
+    class PanelManager {
+      constructor() {
+        this.panels = new Map();
+        this.init();
+      }
+
+      init() {
+        const defaultWidths = { primary: 280, secondary: 360 };
+        
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+          const state = {
+            element: panel,
+            isMinimized: this.getStoredState(name, 'minimized') === true,
+            isHidden: this.getStoredState(name, 'hidden') === true,
+            isFullscreen: false,
+            width: defaultWidths[name] || 280
+          };
+          this.panels.set(name, state);
+          this.applyState(name);
+        });
+
+        this.setupControls();
+        this.setupHoverBehavior();
+      }
+
+      getStoredState(name, key) {
+        try {
+          const val = localStorage.getItem(`panel-${name}-${key}`);
+          return val === 'true';
+        } catch { return false; }
+      }
+
+      saveState(name, key, value) {
+        try {
+          localStorage.setItem(`panel-${name}-${key}`, String(value));
+        } catch {}
+      }
+
+      setupControls() {
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+
+          const hideBtn = panel.querySelector('.panel-hide-btn');
+          const fullscreenBtn = panel.querySelector('.panel-fullscreen-btn');
+          const dockBtn = panel.querySelector('.panel-dock-btn');
+
+          if (hideBtn) {
+            hideBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleHide(name);
+            });
+          }
+
+          if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleFullscreen(name);
+            });
+          }
+
+          if (dockBtn) {
+            dockBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleMinimize(name);
+            });
+          }
+        });
+      }
+
+      setupHoverBehavior() {
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+
+          panel.addEventListener('mouseenter', () => {
+            const state = this.panels.get(name);
+            if (state && state.isMinimized) {
+              panel.classList.add('hover-expanded');
+            }
+          });
+
+          panel.addEventListener('mouseleave', () => {
+            panel.classList.remove('hover-expanded');
+          });
+        });
+      }
+
+      toggleMinimize(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        // Exit fullscreen if active
+        if (state.isFullscreen) {
+          state.isFullscreen = false;
+        }
+        
+        state.isMinimized = !state.isMinimized;
+        this.saveState(name, 'minimized', state.isMinimized);
+        this.applyState(name);
+      }
+
+      toggleHide(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        state.isHidden = !state.isHidden;
+        state.isFullscreen = false;
+        this.saveState(name, 'hidden', state.isHidden);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      toggleFullscreen(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        state.isFullscreen = !state.isFullscreen;
+        if (state.isFullscreen) {
+          state.isMinimized = false;
+        }
+        this.applyState(name);
+      }
+
+      show(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        state.isHidden = false;
+        this.saveState(name, 'hidden', false);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      hide(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        state.isHidden = true;
+        state.isFullscreen = false;
+        this.saveState(name, 'hidden', true);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      applyState(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        const panel = state.element;
+        const root = document.documentElement;
+
+        // Calculate effective width for content padding
+        let effectiveWidth = 0;
+        if (state.isFullscreen) {
+          effectiveWidth = 0; // Fullscreen panel overlays everything
+        } else if (state.isHidden) {
+          effectiveWidth = 0;
+        } else if (state.isMinimized) {
+          // Sidebar minimizes to activity bar width, aux bar to 50px
+          effectiveWidth = name === 'primary' ? 40 : 50;
+        } else {
+          effectiveWidth = state.width;
+        }
+
+        // Set CSS variable for content padding
+        const varName = name === 'primary' ? '--primary-width' : '--secondary-width';
+        root.style.setProperty(varName, `${effectiveWidth}px`);
+
+        // Apply CSS classes
+        panel.classList.toggle('minimized', state.isMinimized && !state.isHidden);
+        panel.classList.toggle('panel-hidden', state.isHidden);
+        panel.classList.toggle('fullscreen', state.isFullscreen);
+
+        // Update body classes for content padding
+        if (name === 'primary') {
+          wb.classList.toggle('primary-hidden', state.isHidden);
+          wb.classList.toggle('primary-minimized', state.isMinimized && !state.isHidden);
+        } else {
+          wb.classList.toggle('secondary-hidden', state.isHidden);
+          wb.classList.toggle('secondary-minimized', state.isMinimized && !state.isHidden);
+        }
+
+        // Update dock button icon
+        const dockBtn = panel.querySelector('.panel-dock-btn i');
+        if (dockBtn) {
+          const dockIcon = name === 'primary' 
+            ? (state.isMinimized ? 'codicon-layout-sidebar-left' : 'codicon-layout-sidebar-left-off')
+            : (state.isMinimized ? 'codicon-layout-sidebar-right' : 'codicon-layout-sidebar-right-off');
+          dockBtn.className = `codicon ${dockIcon}`;
+        }
+
+        // Update fullscreen button icon
+        const fullscreenBtn = panel.querySelector('.panel-fullscreen-btn i');
+        if (fullscreenBtn) {
+          fullscreenBtn.className = state.isFullscreen 
+            ? 'codicon codicon-screen-normal' 
+            : 'codicon codicon-screen-full';
+        }
+
+        refreshEditorSoon?.();
+      }
+
+      isHidden(name) {
+        return this.panels.get(name)?.isHidden ?? false;
+      }
+    }
+
+    // Initialize panel manager
+    let panelManager = null;
+    // Will be initialized after DOM setup
 
     const fileIcons = {
       'js': 'file-code', 'jsx': 'file-code', 'ts': 'file-code',
@@ -2186,13 +2630,149 @@ body {
       tree.innerHTML='';
       sidebarTitle.textContent=view.toUpperCase();
       if(view==='explorer') {
-        [...files.keys()].forEach(file=>{
-          const row=document.createElement('div');
-          row.className='item'+(file===currentFile?' active':'');
-          row.innerHTML=`${fileIconHTML(file)}<span>${file}</span>`;
-          row.onclick=()=>openFile(file);
-          tree.appendChild(row);
-        });
+        const structure = [
+          { name: 'dithering.html', type: 'file' },
+          { name: 'index.html', type: 'file' },
+          { name: 'onboarding.html', type: 'file' },
+          { name: 'onboarding_orig.html', type: 'file' },
+          { name: 'README.md', type: 'file' },
+          { name: 'assets', type: 'dir', children: [
+            { name: 'codicons', type: 'dir', children: [
+              { name: 'codicon.css', type: 'file' }
+            ]},
+            { name: 'examples', type: 'dir', children: [
+              { name: 'default', type: 'dir', children: [
+                { name: 'app.js', type: 'file' },
+                { name: 'project.json', type: 'file' },
+                { name: 'README.md', type: 'file' },
+                { name: 'style.css', type: 'file' }
+              ]}
+            ]},
+            { name: 'seti-theme-icons', type: 'dir', children: [
+              { name: 'seti.woff', type: 'file' },
+              { name: 'vs-seti-icon-theme.json', type: 'file' },
+              { name: 'vs-seti-icon-theme.truncated.json', type: 'file' }
+            ]},
+            { name: 'updates', type: 'dir', children: [
+              { name: 'update.md', type: 'file' }
+            ]},
+            { name: 'visual-studio-code-icons', type: 'dir', children: [
+              { name: 'vscode.svg', type: 'file' }
+            ]}
+          ]},
+          { name: 'themes', type: 'dir', children: [
+            { name: 'cursor-dark.json', type: 'file' },
+            { name: 'cursor-less-dark.json', type: 'file' }
+          ]}
+        ];
+
+        const renderNode = (item, depth = 0, parentPath = '') => {
+          const fullPath = parentPath + item.name;
+          const isDir = item.type === 'dir';
+          const isOpen = depth < 2;
+          
+          const div = document.createElement('div');
+          div.className = 'item' + (fullPath === currentFile ? ' active' : '');
+          div.style.paddingLeft = depth * 16 + 'px';
+          
+          if (isDir) {
+            const chevron = document.createElement('span');
+            chevron.textContent = isOpen ? '▼ ' : '▶ ';
+            chevron.style.fontSize = '10px';
+            chevron.style.display = 'inline-block';
+            chevron.style.width = '14px';
+            chevron.style.cursor = 'pointer';
+            
+            const label = document.createElement('span');
+            label.textContent = item.name;
+            label.style.cursor = 'pointer';
+            
+            div.appendChild(chevron);
+            div.appendChild(label);
+            
+            const childrenContainer = [];
+            
+            div.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const isCurrentOpen = chevron.textContent.includes('▼');
+              chevron.textContent = isCurrentOpen ? '▶ ' : '▼ ';
+              childrenContainer.forEach(child => {
+                child.style.display = isCurrentOpen ? 'none' : 'block';
+              });
+            });
+            
+            tree.appendChild(div);
+            
+            if (item.children && item.children.length > 0) {
+              item.children.forEach(child => {
+                const childDiv = document.createElement('div');
+                const childDepth = depth + 1;
+                const childFullPath = fullPath + '/' + child.name;
+                childDiv.className = 'item' + (childFullPath === currentFile ? ' active' : '');
+                childDiv.style.paddingLeft = childDepth * 16 + 'px';
+                childDiv.style.display = isOpen ? 'block' : 'none';
+                childrenContainer.push(childDiv);
+                
+                if (child.type === 'dir') {
+                  const childChevron = document.createElement('span');
+                  childChevron.textContent = depth < 1 ? '▼ ' : '▶ ';
+                  childChevron.style.fontSize = '10px';
+                  childChevron.style.display = 'inline-block';
+                  childChevron.style.width = '14px';
+                  childChevron.style.cursor = 'pointer';
+                  
+                  const childLabel = document.createElement('span');
+                  childLabel.textContent = child.name;
+                  childLabel.style.cursor = 'pointer';
+                  
+                  childDiv.appendChild(childChevron);
+                  childDiv.appendChild(childLabel);
+                  
+                  const grandchildrenContainer = [];
+                  
+                  childDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isCurrentOpen = childChevron.textContent.includes('▼');
+                    childChevron.textContent = isCurrentOpen ? '▶ ' : '▼ ';
+                    grandchildrenContainer.forEach(gc => {
+                      gc.style.display = isCurrentOpen ? 'none' : 'block';
+                    });
+                  });
+                  
+                  if (child.children && child.children.length > 0) {
+                    child.children.forEach(grandchild => {
+                      const grandchildDiv = document.createElement('div');
+                      const grandchildFullPath = childFullPath + '/' + grandchild.name;
+                      grandchildDiv.className = 'item' + (grandchildFullPath === currentFile ? ' active' : '');
+                      grandchildDiv.style.paddingLeft = (childDepth + 1) * 16 + 'px';
+                      grandchildDiv.style.display = depth < 1 ? 'block' : 'none';
+                      grandchildrenContainer.push(grandchildDiv);
+                      
+                      grandchildDiv.innerHTML = fileIconHTML(grandchild.name) + '<span>' + grandchild.name + '</span>';
+                      grandchildDiv.style.cursor = 'pointer';
+                      grandchildDiv.addEventListener('click', () => openFile(grandchildFullPath));
+                      
+                      tree.appendChild(grandchildDiv);
+                    });
+                  }
+                } else {
+                  childDiv.innerHTML = fileIconHTML(child.name) + '<span>' + child.name + '</span>';
+                  childDiv.style.cursor = 'pointer';
+                  childDiv.addEventListener('click', () => openFile(childFullPath));
+                }
+                
+                tree.appendChild(childDiv);
+              });
+            }
+          } else {
+            div.innerHTML = fileIconHTML(item.name) + '<span>' + item.name + '</span>';
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', () => openFile(fullPath));
+            tree.appendChild(div);
+          }
+        };
+
+        structure.forEach(item => renderNode(item, 0, ''));
       } else {
         tree.innerHTML=`<div class="term-dim" style="padding:6px">(${view}) Placeholder</div>`;
       }
@@ -2208,14 +2788,15 @@ body {
       i.className = `codicon ${isOn ? onClass : offClass}`;
     }
     function syncToggleButtons() {
-      const isSidebarVisible = !wb.classList.contains('hide-sidebar');
+      // Use PanelManager state for floating panels
+      const isSidebarVisible = panelManager ? !panelManager.isHidden('primary') : true;
       const isPanelVisible = !wb.classList.contains('hide-panel');
-      const isAuxVisible = !wb.classList.contains('hide-auxiliary');
+      const isAuxVisible = panelManager ? !panelManager.isHidden('secondary') : true;
       const bSidebar = document.getElementById('btnSidebar');
       const bTerminal = document.getElementById('btnTerminal');
       const bChat = document.getElementById('btnChat');
       // Update icons to reflect state (on/off)
-      setToggleIcon(bSidebar, 'codicon-layout-sidebar-right', 'codicon-layout-sidebar-right-off', isSidebarVisible);
+      setToggleIcon(bSidebar, 'codicon-layout-sidebar-left', 'codicon-layout-sidebar-left-off', isSidebarVisible);
       setToggleIcon(bTerminal, 'codicon-layout-panel', 'codicon-layout-panel-off', isPanelVisible);
       setToggleIcon(bChat, 'codicon-layout-sidebar-right', 'codicon-layout-sidebar-right-off', isAuxVisible);
       bSidebar.setAttribute('aria-pressed', String(isSidebarVisible));
@@ -2247,23 +2828,25 @@ body {
       const savedPos = localStorage.getItem(ACTIVITY_POS_KEY);
       if (savedPos === 'top' || savedPos === 'left') setActivityBarPosition(savedPos, false);
     } catch {}
-    document.getElementById('btnSidebar').onclick=()=>{wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnTerminal').onclick=()=>{wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnSidebarClose').onclick=()=>{
-      wb.classList.add('hide-sidebar');
+
+    // Initialize PanelManager after DOM is ready
+    panelManager = new PanelManager();
+
+    // Title bar toggle buttons - now use PanelManager
+    document.getElementById('btnSidebar').onclick = () => {
+      if (panelManager) {
+        panelManager.toggleHide('primary');
+      }
+    };
+    document.getElementById('btnTerminal').onclick = () => {
+      wb.classList.toggle('hide-panel');
       syncToggleButtons();
       refreshEditorSoon();
     };
-    document.getElementById('btnPanelClose').onclick=()=>{
-      wb.classList.add('hide-panel');
-      syncToggleButtons();
-      refreshEditorSoon();
-    };
-    btnChat.onclick=()=>{wb.classList.toggle('hide-auxiliary');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnAuxClose').onclick=()=>{
-      wb.classList.add('hide-auxiliary');
-      syncToggleButtons();
-      refreshEditorSoon();
+    btnChat.onclick = () => {
+      if (panelManager) {
+        panelManager.toggleHide('secondary');
+      }
     };
 
     // Onboarding overlay
@@ -2291,8 +2874,11 @@ body {
     });
 
     const commands=[
-      {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
+      {label:'View: Toggle Sidebar',icon:'layout-sidebar-left',run:()=>{if(panelManager)panelManager.toggleHide('primary');},kbd:'Ctrl+B'},
       {label:'View: Toggle Panel',icon:'terminal',run:()=>wb.classList.toggle('hide-panel'),kbd:'Ctrl+`'},
+      {label:'View: Toggle Chat',icon:'layout-sidebar-right',run:()=>{if(panelManager)panelManager.toggleHide('secondary');}},
+      {label:'View: Dock Sidebar',icon:'layout-sidebar-left-off',run:()=>{if(panelManager)panelManager.toggleMinimize('primary');}},
+      {label:'View: Dock Chat',icon:'layout-sidebar-right-off',run:()=>{if(panelManager)panelManager.toggleMinimize('secondary');}},
       {label:'View: Move Activity Bar to Top',icon:'layout',run:()=>setActivityBarPosition(activityBarPosition==='top'?'left':'top')},
       {label:'File: Save',icon:'file',run:()=>{files.set(currentFile,ta.value);setDirty(false);saveToStorage();setStatus('Saved');},kbd:'Ctrl+S'},
       {label:'File: New File',icon:'file',run:()=>{const name=prompt('File name:','untitled.txt');if(name&&!files.has(name)){files.set(name,'');saveToStorage();openFile(name);}}},
@@ -2391,7 +2977,7 @@ body {
       if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}
       if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}
       if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}
-      if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();return;}
+      if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();if(panelManager){panelManager.toggleHide('primary');}return;}
       if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();return;}
     });
     window.addEventListener('resize', refreshEditorSoon);
@@ -2422,6 +3008,36 @@ body {
       window.addEventListener('mouseup',()=>{
         if(!dragging)return; dragging=false; document.body.style.userSelect='';
         try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--auxiliary-w').trim()); } catch {}
+        refreshEditorSoon();
+      });
+    })();
+
+    // Sidebar resizer + persistence
+    (function setupSidebarSizer(){
+      const root = document.documentElement;
+      const LS_KEY = 'sidebar-w';
+      try {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) root.style.setProperty('--sidebar-w', saved);
+      } catch {}
+      let startX=0, startW=0, dragging=false;
+      sidebarResizer.addEventListener('mousedown', (e)=>{
+        dragging=true; startX=e.clientX;
+        const cs=getComputedStyle(root).getPropertyValue('--sidebar-w').trim();
+        startW=parseInt(cs,10)||280;
+        document.body.style.userSelect='none';
+      });
+      window.addEventListener('mousemove',(e)=>{
+        if(!dragging)return;
+        const dx=e.clientX - startX;
+        const newW=Math.max(180, Math.min(500, startW + dx));
+        root.style.setProperty('--sidebar-w', newW+'px');
+        // refresh during drag to avoid visual lag
+        refreshEditorSoon();
+      });
+      window.addEventListener('mouseup',()=>{
+        if(!dragging)return; dragging=false; document.body.style.userSelect='';
+        try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--sidebar-w').trim()); } catch {}
         refreshEditorSoon();
       });
     })();
