@@ -37,35 +37,38 @@
       overflow: visible;
     }
     .icon-lg { 
-      width: 20px; 
-      height: 20px; 
+      width: 16px; 
+      height: 16px; 
       flex-shrink: 0;
       overflow: visible;
     }
     
     :root{
-      --bg: #1e1e1e;
-      --fg: #d4d4d4;
-      --muted: #9aa0a6;
-      --border: #2a2a2a;
-      --shadow: rgba(0,0,0,.35);
+      /* Primary tokens (VS Code naming schema) */
+      --editor-background: #1e1e1e;
+      --foreground: #d4d4d4;
+      --descriptionForeground: #6b7280;
+      --contrastBorder: #2a2a2a;
+      --widget-shadow: rgba(0,0,0,.35);
 
+      /* Component-specific backgrounds */
       --titlebar-bg:#1f1f1f;
       --activity-bg:#252526;
       --sidebar-bg:#252526;
       --editor-bg:#1e1e1e;
       --panel-bg:#1b1b1b;
-      --status-bg:#007acc;
+      --status-bg:#1f1f1f;
 
-      --accent:#007acc;
-      --accent-2:#3794ff;
-      --danger:#f44747;
+      /* Accent colors */
+      --focusBorder:#007acc;
+      --textLink-foreground:#3794ff;
+      --errorForeground:#f44747;
 
-      --tab-bg:#2d2d2d;
+      --tab-bg:#1f1f1f;
       --tab-active-bg:#1e1e1e;
 
       /* Extended theming hooks */
-      --border-strong:#2a2a2a;
+      --contrastActiveBorder:#2a2a2a;
       --tab-fg:#ffffff;
       --tab-inactive-fg:#d4d4d4;
       --editor-fg:#d4d4d4;
@@ -81,7 +84,7 @@
       --fs-code: 13px;
       --lh-code: 1.6;
 
-      --activity-w: 48px;
+      --activity-w: 40px;
       --sidebar-w: 280px;
       --titlebar-h: 34px;
       --statusbar-h: 22px;
@@ -89,9 +92,22 @@
       /* Panel sizing (terminal) */
       --panel-h: 260px;
       --splitter-h: 1px;
+
+      /* Floating panel system */
+      --panel-width: 280px;
+      --panel-spacing: 8px;
+      --panel-radius: 8px;
+      --panel-minimized-w: 50px;
+      --panel-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      --panel-bg-floating: rgba(37, 37, 38, 0.95);
+      --glass-blur: 12px;
+
+      /* Dynamic panel widths (set by JS) */
+      --primary-width: 280px;
+      --secondary-width: 360px;
     }
 
-    html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: var(--fs-ui); }
+    html, body { height: 100%; margin: 0; background: var(--editor-background); color: var(--foreground); font-family: var(--font-ui); font-size: var(--fs-ui); }
     .workbench {
       height: 100%;
       display: grid;
@@ -106,7 +122,7 @@
       width: 16px;
       height: 16px;
     }
-    .codicon.codicon-lg { font-size: 20px; width: 20px; height: 20px; }
+    .codicon.codicon-lg { font-size: 16px; width: 16px; height: 16px; }
     /* Always prefer Codicons; suppress any legacy SVG fallbacks */
     .fallback-icon { display: none !important; }
 
@@ -139,7 +155,7 @@
 
     .titlebar {
       background: var(--titlebar-bg);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--contrastBorder);
       display: grid;
       grid-template-columns: auto 1fr auto;
       align-items: center;
@@ -149,15 +165,17 @@
     }
 
     .title-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .title-center { justify-self: center; display: flex; align-items: center; gap: 6px; }
+    .title-center { justify-self: center; display: flex; align-items: center; gap: 12px; }
     .window-dots { display: flex; gap: 6px; }
     .dot { width: 10px; height: 10px; border-radius: 999px; background: #555; }
     .dot.red { background: #ff5f57; }
     .dot.yellow { background: #febc2e; }
     .dot.green { background: #28c840; }
-    .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--titlebar-fg, var(--muted)); }
+    .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--titlebar-fg, var(--descriptionForeground)); }
     .title-actions { display: flex; gap: 6px; align-items: center; }
-    .titlebar .btn { color: var(--titlebar-fg, var(--fg)); }
+    .titlebar .btn { color: var(--titlebar-fg, var(--foreground)); border: none; background: transparent; }
+    .titlebar .btn:hover { background: rgba(255,255,255,.1); }
+    .titlebar .btn:focus { outline: none; box-shadow: none; }
 
     /* Command Center (project quick palette) */
     .project-quick {
@@ -168,7 +186,7 @@
       border-radius: 6px;
       border: 1px solid var(--border, #2a2a2a);
       background: var(--command-bg, rgba(255,255,255,0.02));
-      color: var(--titlebar-fg, var(--fg));
+      color: var(--titlebar-fg, var(--foreground));
       cursor: pointer;
       min-width: 200px;
       max-width: 40vw;
@@ -214,7 +232,7 @@
       width: min(960px, 92vw);
       height: min(78vh, 820px);
       background: var(--chatwin-bg, #1f1f1f);
-      color: var(--chatwin-fg, var(--fg));
+      color: var(--chatwin-fg, var(--foreground));
       border: 1px solid var(--border, #2a2a2a);
       border-radius: 12px;
       display: grid;
@@ -227,7 +245,7 @@
       padding: 8px 12px;
       border-bottom: 1px solid var(--border, #2a2a2a);
       background: var(--titlebar-bg, #1f1f1f);
-      color: var(--titlebar-fg, var(--fg));
+      color: var(--titlebar-fg, var(--foreground));
       font-weight: 600;
     }
     .chat-body {
@@ -244,7 +262,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       padding: 40px 0;
       gap: 8px;
       min-height: 100%;
@@ -268,7 +286,7 @@
     }
     .aux-empty-icon i {
       font-size: 28px;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       transform: scale(4);
       transform-origin: center;
     }
@@ -276,7 +294,7 @@
       max-width: 180px;
       font-size: 13px;
     }
-    .chat-empty { margin: auto; text-align: center; color: var(--muted); }
+    .chat-empty { margin: auto; text-align: center; color: var(--descriptionForeground); }
     .chat-empty .codicon { font-size: 28px; display:block; margin: 0 auto 10px; }
     .chat-bubble { max-width: 75%; padding: 10px 12px; border-radius: 10px; }
     .chat-bubble.user { align-self: flex-end; background: rgba(0,122,204,.18); border:1px solid rgba(0,122,204,.25); }
@@ -293,9 +311,9 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 10px;
+      padding: 2px 10px 6px 10px;
       border: none;
-      background: var(--panel-bg, #1b1b1b);
+      background: var(--sidebar-bg);
     }
     .chat-composer .copilot-pill,
     .aux-chat-bar .copilot-pill {
@@ -306,13 +324,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       font-size: 18px;
       border: none;
       box-shadow: none;
     }
     .copilot-pill.copilot-active {
-      color: var(--accent) !important;
+      color: var(--focusBorder) !important;
     }
     .dropdown-wrap {
       display: inline-flex;
@@ -323,7 +341,7 @@
     .dropdown-wrap select {
       background: transparent;
       border: none;
-      color: var(--fg);
+      color: var(--foreground);
       font-size: 13px;
       font-family: var(--font-ui);
       padding: 4px 0;
@@ -335,12 +353,12 @@
     }
     .dropdown-wrap:hover select,
     .dropdown-wrap:focus-within select {
-      border-bottom-color: var(--accent);
+      border-bottom-color: var(--focusBorder);
       outline: none;
     }
     .dropdown-wrap i {
       font-size: 12px;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       flex-shrink: 0;
     }
     .dropdown-wrap select::-ms-expand { display: none; }
@@ -348,7 +366,7 @@
       flex: 1;
       background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.08);
-      color: var(--fg);
+      color: var(--foreground);
       border-radius: 8px;
       padding: 8px 12px;
       outline: none;
@@ -382,10 +400,10 @@
       min-width: 360px;
       max-width: 560px;
       background: var(--editor-bg);
-      color: var(--fg);
+      color: var(--foreground);
       display: grid;
       grid-template-rows: 44px 1fr;
-      border-left: 1px solid var(--border);
+      border-left: 1px solid var(--contrastBorder);
       transform: translateX(100%);
       transition: transform 220ms cubic-bezier(0.2, 0, 0, 1);
       will-change: transform;
@@ -398,7 +416,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 12px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--contrastBorder);
       background: var(--titlebar-bg);
     }
     .updates-title {
@@ -414,8 +432,8 @@
     }
     .updates-body h1 { font-size: 20px; margin: 0 0 10px; }
     .updates-body h2 { font-size: 16px; margin: 18px 0 8px; }
-    .updates-body p { margin: 8px 0; color: var(--fg); }
-    .updates-body a { color: var(--accent); text-decoration: none; }
+    .updates-body p { margin: 8px 0; color: var(--foreground); }
+    .updates-body a { color: var(--focusBorder); text-decoration: none; }
     .updates-body a:hover { text-decoration: underline; }
     .updates-body img { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,.10); margin: 12px 0; display:block; }
     .updates-body ul { margin: 8px 0 8px 18px; padding: 0; }
@@ -467,8 +485,8 @@
     }
     .btn {
       background: transparent;
-      border: 1px solid var(--border);
-      color: var(--fg);
+      border: 1px solid var(--contrastBorder);
+      color: var(--foreground);
       padding: 4px 8px;
       border-radius: 6px;
       cursor: pointer;
@@ -478,7 +496,7 @@
       gap: 4px;
     }
     .btn:hover { border-color: #3a3a3a; }
-    .btn.primary { border-color: var(--accent); color: #cfeaff; }
+    .btn.primary { border-color: var(--focusBorder); color: #cfeaff; }
     .btn.icon { width: 28px; height: 26px; justify-content: center; padding: 0; }
     .btn.hidden { display: none; }
     .btn.plain { border: 0; }
@@ -509,27 +527,30 @@
 
     .main {
       display: grid;
-      grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w);
-      /* Critical: give the grid a definite row size so `.content` can size its 1fr tracks
-         even when the editor is "empty" (absolute-positioned empty state has no intrinsic height). */
+      background: var(--bg-2);
+      /* Floating panels are position:absolute, content takes full width */
+      grid-template-columns: 1fr;
       grid-template-rows: minmax(0, 1fr);
       height: 100%;
       min-height: 0;
       min-width: 0;
       gap: 0;
+      position: relative; /* Container for absolute panels */
     }
-    /* Pin children to fixed columns so hiding sidebar doesn't shift placement */
-    .main > .activitybar { grid-column: 1; }
-    .main > .sidebar { grid-column: 2; }
-    .main > .content { grid-column: 3; }
-    .main > .resizer-x { grid-column: 4; }
-    .main > .auxiliarybar { grid-column: 5; }
+    /* Activity bar is now inside the sidebar panel */
+    .main > .activitybar { display: none; }
+    .main > .content { grid-column: 1; }
+    /* Floating panels no longer in grid flow */
+    .main > .sidebar,
+    .main > .auxiliarybar { grid-column: unset; }
+    .main > .resizer-y,
+    .main > .resizer-x { display: none; /* Hide legacy resizers for now */ }
 
-    :root { --auxiliary-w: 360px; --aux-divider-w: 4px; }
+    :root { --auxiliary-w: 360px; --aux-divider-w: 4px; --sidebar-divider-w: 1px; }
 
     .activitybar {
       background: var(--activity-bg);
-      border-right: 1px solid var(--border);
+      border-right: 1px solid var(--contrastBorder);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -544,7 +565,7 @@
       align-items: center;
       height: 40px;
       background: var(--activity-bg);
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--contrastBorder);
       overflow: hidden;
       padding: 0 6px;
     }
@@ -560,8 +581,8 @@
       background: transparent;
     }
     .activity-top .act {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
     }
     .activity-top .act.active::before { display: none; }
     .activity-top .act.active::after {
@@ -571,15 +592,15 @@
       right: 7px;
       bottom: 0px;
       height: 2px;
-      background: var(--accent);
+      background: var(--focusBorder);
     }
     .act {
-      width: 34px; height: 34px;
+      width: 28px; height: 28px;
       border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--activity-fg, var(--muted));
+      color: var(--activity-fg, var(--descriptionForeground));
       cursor: pointer;
       overflow: visible;
       position: relative;
@@ -597,34 +618,246 @@
       top: 0;
       bottom: 0;
       width: 3px;
-      background: var(--accent);
+      background: var(--focusBorder);
     }
-    .act:hover { background: rgba(255,255,255,.05); color: var(--activity-active-fg, #fff); }
+    .act:hover { background: rgba(255,255,255,.05); color: var(--activity-active-fg, #fff); border-radius: 8px; }
 
-    .sidebar {
-      background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
+    /* Floating panel base styles */
+    .sidebar,
+    .auxiliarybar {
+      position: absolute;
+      top: var(--panel-spacing);
+      bottom: var(--panel-spacing);
+      background: var(--panel-bg-floating);
+      backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--contrastBorder);
+      border-radius: var(--panel-radius);
+      box-shadow: var(--panel-shadow);
       min-height: 0;
       min-width: 0;
-      display: grid;
-      /* host (optional), header, body */
-      grid-template-rows: auto auto 1fr;
-      overflow: visible;
+      z-index: 20;
+      transition: width 0.25s ease, left 0.25s ease, right 0.25s ease, 
+                  border-radius 0.25s ease, opacity 0.25s ease;
+      overflow: hidden;
     }
+
+    /* Sidebar has activity bar + main content side by side */
+    .sidebar {
+      left: var(--panel-spacing);
+      width: var(--panel-width);
+      display: grid;
+      grid-template-columns: var(--activity-w) 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .sidebar-activity {
+      background: var(--activity-bg);
+      border-right: 1px solid var(--contrastBorder);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 0;
+      gap: 4px;
+      border-radius: var(--panel-radius) 0 0 var(--panel-radius);
+    }
+
+    .sidebar-main {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .auxiliarybar {
+      right: var(--panel-spacing);
+      width: var(--auxiliary-w, 360px);
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+    }
+
+    /* Panel header with controls */
+    .panel-header {
+      padding: 0 10px;
+      border-bottom: 1px solid var(--contrastBorder);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+      height: 34px;
+      min-height: 34px;
+    }
+
+    .panel-title {
+      letter-spacing: .06em;
+      color: var(--descriptionForeground);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .panel-controls {
+      display: flex;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+
+    .panel-header:hover .panel-controls,
+    .sidebar:focus-within .panel-controls,
+    .auxiliarybar:focus-within .panel-controls {
+      opacity: 1;
+    }
+
+    .panel-controls .btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--descriptionForeground);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .panel-controls .btn:hover {
+      background: rgba(255,255,255,.08);
+      color: var(--foreground);
+    }
+
+    /* Legacy sidebar-header support */
     .sidebar-header {
-      padding: 10px 10px 8px;
-      border-bottom: 1px solid var(--border);
+      padding: 0 10px;
+      border-bottom: 1px solid var(--contrastBorder);
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
+      height: 34px;
+      min-height: 34px;
     }
-    .sidebar-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .sidebar-title { letter-spacing: .06em; color: var(--descriptionForeground); font-weight: 600; font-size: 11px; text-transform: uppercase; }
     .sidebar-body { padding: 8px; overflow-x: visible; overflow-y: auto; min-height: 0; }
+
+    /* ===== PANEL STATES ===== */
+
+    /* Minimized/Docked state - dock to edge, show only activity bar */
+    .sidebar.minimized {
+      width: var(--activity-w);
+      left: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      grid-template-columns: 1fr; /* Only show activity bar */
+    }
+
+    .sidebar.minimized .sidebar-main {
+      display: none;
+    }
+
+    .sidebar.minimized .sidebar-activity {
+      border-radius: 0;
+      border-right: none;
+    }
+
+    .auxiliarybar.minimized {
+      width: var(--panel-minimized-w);
+      right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    /* Hide content when minimized */
+    .auxiliarybar.minimized .aux-body,
+    .auxiliarybar.minimized .aux-input,
+    .auxiliarybar.minimized .aux-chat-bar,
+    .auxiliarybar.minimized .panel-title,
+    .auxiliarybar.minimized .panel-controls {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Hover-expanded state - expand while staying docked */
+    .sidebar.minimized:hover,
+    .sidebar.minimized.hover-expanded {
+      width: var(--panel-width);
+      left: 0;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      grid-template-columns: var(--activity-w) 1fr;
+    }
+
+    .sidebar.minimized:hover .sidebar-main,
+    .sidebar.minimized.hover-expanded .sidebar-main {
+      display: grid;
+    }
+
+    .sidebar.minimized:hover .sidebar-activity,
+    .sidebar.minimized.hover-expanded .sidebar-activity {
+      border-radius: 0;
+      border-right: 1px solid var(--contrastBorder);
+    }
+
+    .auxiliarybar.minimized:hover,
+    .auxiliarybar.minimized.hover-expanded {
+      width: var(--auxiliary-w, 360px);
+      right: 0;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    /* Show content on hover when minimized */
+    .auxiliarybar.minimized:hover .aux-body,
+    .auxiliarybar.minimized:hover .aux-input,
+    .auxiliarybar.minimized:hover .aux-chat-bar,
+    .auxiliarybar.minimized:hover .panel-title,
+    .auxiliarybar.minimized:hover .panel-controls,
+    .auxiliarybar.minimized.hover-expanded .aux-body,
+    .auxiliarybar.minimized.hover-expanded .aux-input,
+    .auxiliarybar.minimized.hover-expanded .aux-chat-bar,
+    .auxiliarybar.minimized.hover-expanded .panel-title,
+    .auxiliarybar.minimized.hover-expanded .panel-controls {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.15s ease 0.1s;
+    }
+
+    /* Hidden state */
+    .sidebar.panel-hidden,
+    .auxiliarybar.panel-hidden {
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+    }
+
+    .sidebar.panel-hidden {
+      left: calc(-1 * var(--panel-width));
+    }
+
+    .auxiliarybar.panel-hidden {
+      right: calc(-1 * var(--auxiliary-w, 360px));
+    }
+
+    /* Fullscreen/Maximized state */
+    .sidebar.fullscreen,
+    .auxiliarybar.fullscreen {
+      width: calc(100% - var(--panel-spacing) * 2);
+      z-index: 25;
+    }
+
+    .sidebar.fullscreen {
+      left: var(--panel-spacing);
+      border-radius: var(--panel-radius);
+    }
+
+    .auxiliarybar.fullscreen {
+      right: var(--panel-spacing);
+      border-radius: var(--panel-radius);
+    }
 
     .tree { font-family: var(--font-ui); font-size: var(--fs-ui); line-height: 1.8; }
     .tree .item {
       display: flex; gap: 8px; align-items: center;
       padding: 4px 8px; border-radius: 6px; cursor: pointer;
-      color: var(--sidebar-fg, var(--fg));
+      color: var(--sidebar-fg, var(--foreground));
       overflow: visible;
     }
     .tree .item:hover { background: var(--list-hover-bg, rgba(255,255,255,.05)); }
@@ -641,6 +874,15 @@
       display: grid;
       grid-template-rows: auto 1fr var(--splitter-h) var(--panel-h);
       background: var(--editor-bg);
+      /* Padding to clear floating panels - panel width + spacing on each side */
+      padding-left: calc(var(--primary-width) + var(--panel-spacing));
+      padding-right: calc(var(--secondary-width) + var(--panel-spacing));
+      transition: padding 0.25s ease;
+      /* Fix alignment with floating panels */
+      margin-top: var(--panel-spacing);
+      margin-bottom: var(--panel-spacing);
+      border-radius: var(--panel-radius);
+      overflow: hidden;
     }
     /* Pin content children to fixed rows so hiding tabs doesn't reflow editor/panel rows */
     .content > .tabs { grid-row: 1; }
@@ -670,7 +912,7 @@
 
     .panel-resizer {
       height: var(--splitter-h);
-      background: var(--border);
+      background: var(--contrastBorder);
       cursor: row-resize;
       user-select: none;
     }
@@ -678,12 +920,13 @@
 
     .tabs {
       display: flex; gap: 1px;
-      background: var(--border);
-      border-bottom: 1px solid var(--border);
+      background: var(--titlebar-bg);
+      border-bottom: 1px solid var(--contrastBorder);
       user-select: none;
       overflow-x: auto;
       min-height: 34px;
       align-items: stretch;
+      padding-top: 8px;
     }
     .tab {
       background: var(--tab-bg);
@@ -695,15 +938,15 @@
       flex-shrink: 0;
       overflow: visible;
       height: 34px;
-      color: var(--tab-inactive-fg, var(--fg));
+      color: var(--tab-inactive-fg, var(--foreground));
     }
     .tab:hover { background: rgba(255,255,255,.05); }
-    .tab.active { background: var(--tab-active-bg); border-bottom: 2px solid var(--accent); color: var(--tab-fg, #fff); }
+    .tab.active { background: var(--tab-active-bg); border-bottom: 2px solid var(--focusBorder); color: var(--tab-fg, #fff); }
     .tab .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tab .icon { flex-shrink: 0; margin: 0 2px; }
     .tab .close { margin-left:auto; opacity:.7; }
     .tab:hover .close { opacity: 1; }
-    .dot-unsaved { width: 7px; height: 7px; border-radius: 999px; background: var(--accent-2); flex-shrink: 0; margin: 0 2px; }
+    .dot-unsaved { width: 7px; height: 7px; border-radius: 999px; background: var(--textLink-foreground); flex-shrink: 0; margin: 0 2px; }
 
     .editor-wrap {
       position: relative;
@@ -720,7 +963,7 @@
     }
     .gutter {
       background: #191919;
-      border-right: 1px solid var(--border);
+      border-right: 1px solid var(--contrastBorder);
       padding: 10px 0;
       font-family: var(--font-mono);
       font-size: var(--fs-code);
@@ -799,7 +1042,7 @@
       font-family: var(--font-mono);
       font-size: var(--fs-code);
       line-height: var(--lh-code);
-      color: var(--editor-fg, var(--fg));
+      color: var(--editor-fg, var(--foreground));
       word-wrap: normal;
       overflow-wrap: normal;
       letter-spacing: 0;
@@ -845,7 +1088,7 @@
 
     .panel {
       background: var(--panel-bg);
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--contrastBorder);
       min-height: 0;
       display: grid;
       grid-template-rows: 34px 1fr;
@@ -853,7 +1096,7 @@
     .panel-tabs {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 8px;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--contrastBorder);
       user-select: none;
     }
     .panel-left { display:flex; gap: 6px; align-items:center; }
@@ -866,14 +1109,14 @@
       border-bottom: 2px solid transparent;
       cursor: pointer;
       display: flex; align-items: center; gap: 6px;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: .06em;
       font-weight: 600;
     }
     .pill:hover { color: #fff; background: rgba(255,255,255,.03); }
-    .pill.active { border-bottom-color: var(--accent); color: #fff; }
+    .pill.active { border-bottom-color: var(--focusBorder); color: #fff; }
 
     .terminal {
       font-family: var(--font-mono);
@@ -890,9 +1133,9 @@
       overflow: auto;
       min-height: 0;
     }
-    .term-line { color: var(--panel-fg, var(--fg)); }
-    .term-dim { color: var(--muted); }
-    .term-err { color: var(--danger); }
+    .term-line { color: var(--panel-fg, var(--foreground)); }
+    .term-dim { color: var(--descriptionForeground); }
+    .term-err { color: var(--errorForeground); }
     .term-ok  { color: #89d185; }
 
     .term-input-line {
@@ -921,7 +1164,7 @@
       width: 100%;
       background: transparent;
       border: 0;
-      color: var(--fg);
+      color: var(--foreground);
       padding: 0;
       outline: none;
       font-family: var(--font-mono);
@@ -937,7 +1180,7 @@
       background: #1f1f1f;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 8px;
-      box-shadow: 0 18px 60px var(--shadow);
+      box-shadow: 0 18px 60px var(--widget-shadow);
       overflow: hidden;
       display: none;
       z-index: 10;
@@ -953,22 +1196,27 @@
       border-bottom: 1px solid rgba(255,255,255,.04);
     }
     .sug-row:last-child { border-bottom: 0; }
-    .sug-row .sug-icon { color: var(--muted); }
-    .sug-row .sug-label { color: var(--fg); font-family: var(--font-mono); }
-    .sug-row .sug-desc { color: var(--muted); font-size: 11px; justify-self: end; }
+    .sug-row .sug-icon { color: var(--descriptionForeground); }
+    .sug-row .sug-label { color: var(--foreground); font-family: var(--font-mono); }
+    .sug-row .sug-desc { color: var(--descriptionForeground); font-size: 11px; justify-self: end; }
     .sug-row.active { background: rgba(0,122,204,.18); }
 
     .statusbar {
-      background: var(--status-bg);
+      /* Match the surface directly above: panel when visible, editor when panel is hidden */
+      background: var(--panel-bg);
+      border-top: 1px solid var(--contrastBorder);
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
       padding: 0 10px;
-      color: var(--status-fg, white);
+      color: var(--descriptionForeground);
       user-select: none;
     }
+    .hide-panel .statusbar { background: var(--editor-bg); }
     .status-left, .status-right { display:flex; gap: 10px; align-items:center; }
     .status-item { display: flex; align-items: center; gap: 4px; }
+    .copilot-status { cursor: pointer; }
+    .copilot-status.copilot-active { color: var(--focusBorder); }
 
     /* Editor empty state */
     .editor-empty {
@@ -978,7 +1226,7 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       /* Note: empty state now overlays only the editor region, so no terminal padding needed */
       padding: 0;
       font-family: var(--font-ui);
@@ -1009,7 +1257,7 @@
       display: inline-block;
       font-size: 96px; 
       line-height: 1; 
-      color: var(--fg);
+      color: var(--foreground);
       opacity: .14; 
       margin: 0;
       /* Override global `.codicon` 16x16 box so the glyph centers correctly at large sizes */
@@ -1021,7 +1269,7 @@
       display: grid;
       gap: 8px;
       font-size: 12px;
-      color: var(--muted);
+      color: var(--descriptionForeground);
       /* Slightly narrower so labels sit closer to key sequences */
       width: min(420px, 92%);
     }
@@ -1045,33 +1293,30 @@
       text-align: center;
     }
 
-    /* Auxiliary (Chat) Bar */
+    /* Auxiliary (Chat) Bar - uses shared floating styles above */
     .auxiliarybar {
-      background: var(--sidebar-bg);
-      border-left: 1px solid var(--border);
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      min-width: 220px;
-      /* Allow grid to shrink properly and avoid extra right blank area */
-      width: 100%;
-      min-width: 0;
-      overflow: hidden;
+      grid-template-rows: auto 1fr auto auto;
     }
     .aux-header {
-      padding: 10px 10px 8px;
-      border-bottom: 1px solid var(--border);
+      padding: 0 10px;
+      border-bottom: 1px solid var(--contrastBorder);
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
+      height: 34px;
+      min-height: 34px;
     }
-    .aux-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .aux-title { letter-spacing: .06em; color: var(--descriptionForeground); font-weight: 600; font-size: 11px; text-transform: uppercase; }
     .aux-body { padding: 10px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
-    .aux-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
-    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--fg); border-radius: 8px; padding: 8px 10px; outline: none; font-family: var(--font-ui); font-size: 12px; }
+    .aux-input { display: flex; gap: 0; padding: 10px 10px 4px 10px; border-top: 1px solid var(--contrastBorder); align-items: center; position: relative; }
+    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--foreground); border-radius: 8px; padding: 8px 10px 8px 12px; outline: none; font-family: var(--font-ui); font-size: 12px; padding-right: 76px; }
+    .aux-input .btn { position: absolute; right: 16px; margin: 0; }
+    .aux-input #chatMic { right: 46px; }
     .msg { display: inline-flex; max-width: 90%; padding: 8px 10px; border-radius: 8px; }
     .msg.user { align-self: flex-end; background: rgba(0,122,204,.18); border: 1px solid rgba(0,122,204,.25); }
     .msg.bot { align-self: flex-start; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
-    .resizer-x { width: var(--aux-divider-w); cursor: col-resize; background: transparent; align-self: stretch; }
-    .resizer-x:hover { background: rgba(255,255,255,.06); }
+    .resizer-y { height: auto; width: var(--splitter-h); cursor: col-resize; background: transparent; align-self: stretch; }
+    .resizer-y:hover { background: rgba(255,255,255,.06); }
+    .main > .resizer-y { grid-column: 3; }
 
     .overlay {
       position: fixed;
@@ -1089,7 +1334,7 @@
       background: #252526;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 8px;
-      box-shadow: 0 18px 60px var(--shadow);
+      box-shadow: 0 18px 60px var(--widget-shadow);
       overflow: hidden;
     }
     .palette input {
@@ -1114,22 +1359,211 @@
       align-items: center;
     }
     .pal-item:hover, .pal-item.active { background: rgba(0,122,204,.18); }
-    .pal-desc { color: var(--muted); font-size: 11px; }
-    .pal-kbd { color: var(--muted); font-size: 11px; }
+    .pal-desc { color: var(--descriptionForeground); font-size: 11px; }
+    .pal-kbd { color: var(--descriptionForeground); font-size: 11px; }
 
     .hide-activity .activitybar { display: none !important; }
-    .hide-activity .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
-    .hide-sidebar .sidebar { display: none !important; }
-    .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
-    .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
+    .hide-activity .main { grid-template-columns: 0px 1fr; }
+    
     .hide-panel .panel { display: none !important; }
     .hide-panel .content { grid-template-rows: auto 1fr 0px 0px; }
-    .hide-auxiliary .auxiliarybar, .hide-auxiliary .resizer-x { display: none !important; }
-    .hide-auxiliary .main { grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) 0px 0px; }
-    /* Resolve combined hide states to avoid leftover reserved widths */
-    .hide-sidebar.hide-auxiliary .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-auxiliary .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-sidebar.hide-auxiliary .main { grid-template-columns: 0px 0px minmax(0,1fr) 0px 0px; }
+    
+    /* Floating panel visibility is handled by .panel-hidden class and PanelManager */\n    /* These classes update content padding based on panel state */
+    .primary-hidden .content {
+      padding-left: 0;
+    }
+    .secondary-hidden .content {
+      padding-right: 0;
+    }
+    .primary-minimized .content {
+      padding-left: var(--activity-w); /* Activity bar width when docked */
+    }
+    .secondary-minimized .content {
+      padding-right: var(--panel-minimized-w);
+    }
+    /* Design Tokens: unified dark-grey, elevation, spacing, motion */
+    :root {
+      /* Core palette: expansive dark greys for softer contrast */
+      --bg-0: #0f0f10;
+      --bg-1: #141415;
+      --bg-2: #1a1a1b; /* default surfaces */
+      --bg-3: #202022; /* raised surfaces */
+      --line-weak: #2a2a2c; /* ultra-low contrast separators */
+
+      /* Text */
+      --fg-strong: #d4d4d4;
+      --fg: #c8c8c8;
+      --fg-muted: #9fa3a7;
+      --fg-dim: #6b7280;
+
+      /* Accents & status */
+      --focusBorder: #007acc; /* accessibility anchor */
+      --accent: #3794ff;
+      --error: #f44747;
+      --ok: #89d185;
+
+      /* Elevation (soft shadows, no hard lines) */
+      --elev-0: none;
+      --elev-1: 0 2px 8px rgba(0,0,0,0.25);
+      --elev-2: 0 6px 18px rgba(0,0,0,0.28);
+      --elev-3: 0 12px 28px rgba(0,0,0,0.32);
+
+      /* Spacing scale */
+      --space-2: 2px;
+      --space-4: 4px;
+      --space-6: 6px;
+      --space-8: 8px;
+      --space-12: 12px;
+      --space-16: 16px;
+      --space-24: 24px;
+
+      /* Radii */
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+
+      /* Motion */
+      --ease: cubic-bezier(0.2, 0.0, 0.0, 1);
+      --dur-fast: 120ms;
+      --dur-med: 180ms;
+      --dur-slow: 240ms;
+
+      /* Legacy compatibility tokens mapped to new set */
+      --editor-background: var(--bg-2);
+      --foreground: var(--fg-strong);
+      --contrastBorder: var(--line-weak);
+      --titlebar-bg: var(--bg-2);
+      --activity-bg: var(--bg-2);
+      --sidebar-bg: var(--bg-2);
+      --editor-bg: var(--bg-2);
+      --panel-bg: var(--bg-2);
+      --status-bg: var(--bg-2);
+      --widget-shadow: rgba(0,0,0,.35);
+    }
+
+    /* Full-bleed surfaces: remove hard borders, use spacing and elevation */
+    body {
+      background: var(--bg-1);
+      color: var(--fg);
+    }
+
+    .workbench {
+      background: var(--bg-1);
+    }
+
+    .titlebar {
+      background: var(--bg-2);
+      box-shadow: var(--elev-1);
+      border-bottom: 0; /* remove hard line */
+    }
+
+    .statusbar {
+      background: var(--bg-2);
+      box-shadow: var(--elev-1);
+      border-top: 0; /* remove hard line */
+    }
+
+    /* Tabs: minimal chrome, strong active indicator without heavy borders */
+    .tabs {
+      background: var(--bg-2);
+      border-bottom: 0; /* full-bleed */
+      padding-inline: var(--space-8);
+    }
+    .tabs .tab {
+      background: transparent;
+      border: 0;
+      margin-inline: var(--space-4);
+      padding: var(--space-8) var(--space-12);
+      border-radius: var(--radius-sm);
+      transition: background var(--dur-fast) var(--ease);
+    }
+    .tabs .tab.active {
+      background: var(--bg-3);
+      box-shadow: var(--elev-1);
+    }
+    .tabs .tab::after {
+      content: "";
+      display: block;
+      height: 2px;
+      margin-top: var(--space-4);
+      background: transparent;
+    }
+    .tabs .tab.active::after {
+      background: var(--accent);
+    }
+
+    /* Editor and gutter: softer separation, no hard divider */
+    .editor-wrap {
+      background: var(--editor-background);
+      border: 0; /* remove outlines */
+      gap: var(--space-8);
+      padding-inline: var(--space-8);
+    }
+    .gutter {
+      background: #181819;
+      border-right: 0; /* remove hard line */
+      box-shadow: inset -1px 0 0 rgba(255,255,255,0.03); /* ultra-soft edge */
+      color: var(--fg-muted);
+    }
+    .gutter .current-line {
+      background: rgba(255,255,255,0.04);
+      color: var(--fg);
+    }
+    .editor {
+      background: var(--bg-2);
+      box-shadow: var(--elev-0);
+    }
+
+    /* Panels (terminal/output): rely on elevation + spacing, not borders */
+    .panel {
+      background: var(--bg-2);
+      border-top: 0;
+      box-shadow: var(--elev-1);
+    }
+    .panel-header {
+      background: transparent;
+      border-bottom: 0;
+      padding: var(--space-8) var(--space-12);
+    }
+
+    /* Sidebars with gentle hierarchy */
+    .sidebar,
+    .auxiliarybar {
+      background: var(--bg-2);
+      border-right: 0;
+      box-shadow: var(--elev-1);
+    }
+
+    /* Buttons: preserve accessible focus while reducing chrome */
+    .btn:focus-visible,
+    button:focus-visible,
+    [role="button"]:focus-visible {
+      outline: 2px solid var(--focusBorder);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(55,148,255,0.12);
+      border-radius: var(--radius-sm);
+    }
+
+    /* Overlay and palette: harmonized glass */
+    .overlay.show .palette,
+    .updates-overlay .updates-modal,
+    .chat-overlay .chat-window {
+      background: rgba(32,32,34,0.9);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--elev-2);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Reduced-motion respect remains */
+    @media (prefers-reduced-motion: reduce) {
+      .tabs .tab,
+      .overlay .palette,
+      .panel,
+      .sidebar,
+      .auxiliarybar {
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1225,6 +1659,12 @@
         <div class="title" id="titleText">VS Code-ish</div>
       </div>
       <div class="title-center">
+        <button class="btn icon" title="Go Back" id="btnNavBack">
+          <i class="codicon codicon-arrow-left"></i>
+        </button>
+        <button class="btn icon" title="Go Forward" id="btnNavForward">
+          <i class="codicon codicon-arrow-right"></i>
+        </button>
         <div class="project-quick" id="projectQuick" title="Show and Run Commands (Ctrl+Shift+P)" tabindex="0" role="button" aria-label="Project Command Center">
           <i class="codicon codicon-search"></i>
           <span class="label" id="projectName">js-embeddings-1</span>
@@ -1256,54 +1696,50 @@
           <svg class="icon fallback-icon"><use href="#icon-info"/></svg>
         </button>
         <button class="btn icon updates-btn" title="Updates" id="btnUpdates" aria-haspopup="dialog" aria-expanded="false">
-          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode.svg" alt="Updates" />
+          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="Updates" />
           <span class="updates-dot" aria-hidden="true"></span>
         </button>
       </div>
     </div>
 
     <div class="main">
-      <div class="activitybar">
-        <div class="act active" data-view="explorer" title="Explorer">
-          <i class="codicon codicon-files codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-files"/></svg>
+      <div class="sidebar" id="sidebar" data-panel-name="primary">
+        <div class="sidebar-activity">
+          <div class="act active" data-view="explorer" title="Explorer">
+            <i class="codicon codicon-files codicon-lg"></i>
+          </div>
+          <div class="act" data-view="search" title="Search">
+            <i class="codicon codicon-search codicon-lg"></i>
+          </div>
+          <div class="act" data-view="scm" title="Source Control">
+            <i class="codicon codicon-source-control codicon-lg"></i>
+          </div>
+          <div class="act" data-view="run" title="Run and Debug">
+            <i class="codicon codicon-debug-alt codicon-lg"></i>
+          </div>
+          <div class="act" data-view="ext" title="Extensions">
+            <i class="codicon codicon-extensions codicon-lg"></i>
+          </div>
+          <div style="flex:1"></div>
+          <div class="act" title="Settings">
+            <i class="codicon codicon-settings-gear codicon-lg"></i>
+          </div>
         </div>
-        <div class="act" data-view="search" title="Search">
-          <i class="codicon codicon-search codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-search"/></svg>
-        </div>
-        <div class="act" data-view="scm" title="Source Control">
-          <i class="codicon codicon-source-control codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-git"/></svg>
-        </div>
-        <div class="act" data-view="run" title="Run and Debug">
-          <i class="codicon codicon-debug-alt codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-debug"/></svg>
-        </div>
-        <div class="act" data-view="ext" title="Extensions">
-          <i class="codicon codicon-extensions codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-extensions"/></svg>
-        </div>
-        <div style="flex:1"></div>
-        <div class="act" title="Settings">
-          <i class="codicon codicon-settings-gear codicon-lg"></i>
-          <svg class="icon icon-lg fallback-icon"><use href="#icon-settings"/></svg>
-        </div>
-      </div>
-
-      <div class="sidebar">
-        <div class="activitybar-top-host" id="activityTopHost" aria-hidden="true"></div>
-        <div class="sidebar-header">
-          <div class="sidebar-title" id="sidebarTitle">EXPLORER</div>
-          <button class="btn icon" id="btnSidebarClose">
-            <i class="codicon codicon-close"></i>
-            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-          </button>
-        </div>
-        <div class="sidebar-body">
-          <div class="tree" id="tree"></div>
+        <div class="sidebar-main">
+          <div class="panel-header">
+            <div class="panel-title" id="sidebarTitle">EXPLORER</div>
+            <div class="panel-controls">
+              <button class="btn panel-hide-btn" title="Hide panel"><i class="codicon codicon-eye-closed"></i></button>
+              <button class="btn panel-fullscreen-btn" title="Maximize panel"><i class="codicon codicon-screen-full"></i></button>
+              <button class="btn panel-dock-btn" title="Dock panel"><i class="codicon codicon-layout-sidebar-left-off"></i></button>
+            </div>
+          </div>
+          <div class="sidebar-body">
+            <div class="tree" id="tree"></div>
+          </div>
         </div>
       </div>
+      <div class="resizer-y" id="sidebarResizer"></div>
 
       <div class="content">
         <div class="tabs" id="tabs"></div>
@@ -1353,12 +1789,6 @@
               <div class="pill">Problems</div>
               <div class="pill">Output</div>
             </div>
-            <div class="panel-right">
-              <button class="btn icon" id="btnPanelClose">
-                <i class="codicon codicon-close"></i>
-                <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-              </button>
-            </div>
           </div>
 
           <div class="terminal" id="termOut">
@@ -1374,35 +1804,29 @@
         </div>
       </div>
       <div class="resizer-x" id="auxResizer"></div>
-      <div class="auxiliarybar" id="aux">
-        <div class="aux-header">
-          <div class="aux-title">CHAT</div>
-          <button class="btn icon" id="btnAuxClose">
-            <i class="codicon codicon-close"></i>
-            <svg class="icon fallback-icon"><use href="#icon-close"/></svg>
-          </button>
+      <div class="auxiliarybar" id="aux" data-panel-name="secondary">
+        <div class="panel-header">
+          <div class="panel-title">CHAT</div>
+          <div class="panel-controls">
+            <button class="btn panel-hide-btn" title="Hide panel"><i class="codicon codicon-eye-closed"></i></button>
+            <button class="btn panel-fullscreen-btn" title="Maximize panel"><i class="codicon codicon-screen-full"></i></button>
+            <button class="btn panel-dock-btn" title="Dock panel"><i class="codicon codicon-layout-sidebar-right-off"></i></button>
+          </div>
         </div>
         <div class="aux-body" id="chatLog">
           <div class="chat-empty-state" id="auxEmpty">
-            <div class="aux-empty-content">
-              <div class="aux-empty-icon">
-                <i class="codicon codicon-chat-sparkle"></i>
-              </div>
-              <div class="aux-empty-copy">
-                Ask anything to get started
-              </div>
-            </div>
           </div>
         </div>
         <div class="aux-input">
           <input id="chatInput" placeholder="Ask something…" />
-          <button class="btn" id="chatSend">
+          <button class="btn icon" id="chatMic" title="Voice input">
+            <i class="codicon codicon-mic"></i>
+          </button>
+          <button class="btn icon" id="chatSend" title="Send">
             <i class="codicon codicon-send"></i>
-            <svg class="icon fallback-icon"><use href="#icon-output"/></svg>
           </button>
         </div>
         <div class="aux-chat-bar">
-          <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
           <button class="btn icon" id="auxAttach"><i class="codicon codicon-attach"></i></button>
           <span class="dropdown-wrap">
             <select id="auxMode" title="Mode">
@@ -1440,6 +1864,9 @@
           <span id="statusFile">app.js</span>
         </span>
         <span id="statusPos">Ln 1, Col 1</span>
+        <span class="status-item copilot-status copilot-active" title="Copilot">
+          <i class="codicon codicon-copilot"></i>
+        </span>
       </div>
     </div>
   </div>
@@ -1456,7 +1883,7 @@
     <div class="updates-modal" role="dialog" aria-modal="true" aria-label="Updates">
       <div class="updates-header">
         <div class="updates-title">
-          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode.svg" alt="" aria-hidden="true" />
+          <img class="vscode-mark" src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="" aria-hidden="true" />
           <span>Updates</span>
         </div>
         <button class="btn icon" id="btnUpdatesClose" aria-label="Close Updates">
@@ -1485,7 +1912,6 @@
         </div>
       </div>
       <div class="chat-composer">
-        <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
         <button class="btn icon" id="chatAttach"><i class="codicon codicon-attach"></i></button>
         <span class="dropdown-wrap">
           <select id="chatMode" title="Mode">
@@ -1560,6 +1986,7 @@
     const btnChat = document.getElementById('btnChat');
     const aux = document.getElementById('aux');
     const auxResizer = document.getElementById('auxResizer');
+    const sidebarResizer = document.getElementById('sidebarResizer');
     const panelResizer = document.getElementById('panelResizer');
     const chatLog = document.getElementById('chatLog');
     const auxEmptyState = document.getElementById('auxEmpty');
@@ -1570,6 +1997,218 @@
     const activityTopHost = document.getElementById('activityTopHost');
     const ACTIVITY_POS_KEY = 'activity-bar-position';
     let activityBarPosition = 'left';
+    const sidebarEl = document.getElementById('sidebar');
+
+    // ===== PANEL MANAGER =====
+    // Manages floating panel states: normal, minimized (docked), hidden, fullscreen
+    class PanelManager {
+      constructor() {
+        this.panels = new Map();
+        this.init();
+      }
+
+      init() {
+        const defaultWidths = { primary: 280, secondary: 360 };
+        
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+          const state = {
+            element: panel,
+            isMinimized: this.getStoredState(name, 'minimized') === true,
+            isHidden: this.getStoredState(name, 'hidden') === true,
+            isFullscreen: false,
+            width: defaultWidths[name] || 280
+          };
+          this.panels.set(name, state);
+          this.applyState(name);
+        });
+
+        this.setupControls();
+        this.setupHoverBehavior();
+      }
+
+      getStoredState(name, key) {
+        try {
+          const val = localStorage.getItem(`panel-${name}-${key}`);
+          return val === 'true';
+        } catch { return false; }
+      }
+
+      saveState(name, key, value) {
+        try {
+          localStorage.setItem(`panel-${name}-${key}`, String(value));
+        } catch {}
+      }
+
+      setupControls() {
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+
+          const hideBtn = panel.querySelector('.panel-hide-btn');
+          const fullscreenBtn = panel.querySelector('.panel-fullscreen-btn');
+          const dockBtn = panel.querySelector('.panel-dock-btn');
+
+          if (hideBtn) {
+            hideBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleHide(name);
+            });
+          }
+
+          if (fullscreenBtn) {
+            fullscreenBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleFullscreen(name);
+            });
+          }
+
+          if (dockBtn) {
+            dockBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              this.toggleMinimize(name);
+            });
+          }
+        });
+      }
+
+      setupHoverBehavior() {
+        document.querySelectorAll('[data-panel-name]').forEach(panel => {
+          const name = panel.dataset.panelName;
+
+          panel.addEventListener('mouseenter', () => {
+            const state = this.panels.get(name);
+            if (state && state.isMinimized) {
+              panel.classList.add('hover-expanded');
+            }
+          });
+
+          panel.addEventListener('mouseleave', () => {
+            panel.classList.remove('hover-expanded');
+          });
+        });
+      }
+
+      toggleMinimize(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        // Exit fullscreen if active
+        if (state.isFullscreen) {
+          state.isFullscreen = false;
+        }
+        
+        state.isMinimized = !state.isMinimized;
+        this.saveState(name, 'minimized', state.isMinimized);
+        this.applyState(name);
+      }
+
+      toggleHide(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        state.isHidden = !state.isHidden;
+        state.isFullscreen = false;
+        this.saveState(name, 'hidden', state.isHidden);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      toggleFullscreen(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        state.isFullscreen = !state.isFullscreen;
+        if (state.isFullscreen) {
+          state.isMinimized = false;
+        }
+        this.applyState(name);
+      }
+
+      show(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        state.isHidden = false;
+        this.saveState(name, 'hidden', false);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      hide(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        state.isHidden = true;
+        state.isFullscreen = false;
+        this.saveState(name, 'hidden', true);
+        this.applyState(name);
+        syncToggleButtons();
+      }
+
+      applyState(name) {
+        const state = this.panels.get(name);
+        if (!state) return;
+        
+        const panel = state.element;
+        const root = document.documentElement;
+
+        // Calculate effective width for content padding
+        let effectiveWidth = 0;
+        if (state.isFullscreen) {
+          effectiveWidth = 0; // Fullscreen panel overlays everything
+        } else if (state.isHidden) {
+          effectiveWidth = 0;
+        } else if (state.isMinimized) {
+          // Sidebar minimizes to activity bar width, aux bar to 50px
+          effectiveWidth = name === 'primary' ? 40 : 50;
+        } else {
+          effectiveWidth = state.width;
+        }
+
+        // Set CSS variable for content padding
+        const varName = name === 'primary' ? '--primary-width' : '--secondary-width';
+        root.style.setProperty(varName, `${effectiveWidth}px`);
+
+        // Apply CSS classes
+        panel.classList.toggle('minimized', state.isMinimized && !state.isHidden);
+        panel.classList.toggle('panel-hidden', state.isHidden);
+        panel.classList.toggle('fullscreen', state.isFullscreen);
+
+        // Update body classes for content padding
+        if (name === 'primary') {
+          wb.classList.toggle('primary-hidden', state.isHidden);
+          wb.classList.toggle('primary-minimized', state.isMinimized && !state.isHidden);
+        } else {
+          wb.classList.toggle('secondary-hidden', state.isHidden);
+          wb.classList.toggle('secondary-minimized', state.isMinimized && !state.isHidden);
+        }
+
+        // Update dock button icon
+        const dockBtn = panel.querySelector('.panel-dock-btn i');
+        if (dockBtn) {
+          const dockIcon = name === 'primary' 
+            ? (state.isMinimized ? 'codicon-layout-sidebar-left' : 'codicon-layout-sidebar-left-off')
+            : (state.isMinimized ? 'codicon-layout-sidebar-right' : 'codicon-layout-sidebar-right-off');
+          dockBtn.className = `codicon ${dockIcon}`;
+        }
+
+        // Update fullscreen button icon
+        const fullscreenBtn = panel.querySelector('.panel-fullscreen-btn i');
+        if (fullscreenBtn) {
+          fullscreenBtn.className = state.isFullscreen 
+            ? 'codicon codicon-screen-normal' 
+            : 'codicon codicon-screen-full';
+        }
+
+        refreshEditorSoon?.();
+      }
+
+      isHidden(name) {
+        return this.panels.get(name)?.isHidden ?? false;
+      }
+    }
+
+    // Initialize panel manager
+    let panelManager = null;
+    // Will be initialized after DOM setup
 
     const fileIcons = {
       'js': 'file-code', 'jsx': 'file-code', 'ts': 'file-code',
@@ -2003,15 +2642,15 @@ Now using the authentic VS Code logo icon!
 **Ctrl+\`** - Toggle Terminal
 **Ctrl+S** - Save`,
       'style.css': `:root {
-  --primary: #007acc;
-  --bg: #1e1e1e;
-  --fg: #d4d4d4;
+  --focusBorder: #007acc;
+  --editor-background: #1e1e1e;
+  --foreground: #d4d4d4;
 }
 
 body {
   font-family: system-ui;
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--editor-background);
+  color: var(--foreground);
   margin: 0;
   padding: 0;
 }`
@@ -2186,13 +2825,149 @@ body {
       tree.innerHTML='';
       sidebarTitle.textContent=view.toUpperCase();
       if(view==='explorer') {
-        [...files.keys()].forEach(file=>{
-          const row=document.createElement('div');
-          row.className='item'+(file===currentFile?' active':'');
-          row.innerHTML=`${fileIconHTML(file)}<span>${file}</span>`;
-          row.onclick=()=>openFile(file);
-          tree.appendChild(row);
-        });
+        const structure = [
+          { name: 'dithering.html', type: 'file' },
+          { name: 'index.html', type: 'file' },
+          { name: 'onboarding.html', type: 'file' },
+          { name: 'onboarding_orig.html', type: 'file' },
+          { name: 'README.md', type: 'file' },
+          { name: 'assets', type: 'dir', children: [
+            { name: 'codicons', type: 'dir', children: [
+              { name: 'codicon.css', type: 'file' }
+            ]},
+            { name: 'examples', type: 'dir', children: [
+              { name: 'default', type: 'dir', children: [
+                { name: 'app.js', type: 'file' },
+                { name: 'project.json', type: 'file' },
+                { name: 'README.md', type: 'file' },
+                { name: 'style.css', type: 'file' }
+              ]}
+            ]},
+            { name: 'seti-theme-icons', type: 'dir', children: [
+              { name: 'seti.woff', type: 'file' },
+              { name: 'vs-seti-icon-theme.json', type: 'file' },
+              { name: 'vs-seti-icon-theme.truncated.json', type: 'file' }
+            ]},
+            { name: 'updates', type: 'dir', children: [
+              { name: 'update.md', type: 'file' }
+            ]},
+            { name: 'visual-studio-code-icons', type: 'dir', children: [
+              { name: 'vscode.svg', type: 'file' }
+            ]}
+          ]},
+          { name: 'themes', type: 'dir', children: [
+            { name: 'cursor-dark.json', type: 'file' },
+            { name: 'cursor-less-dark.json', type: 'file' }
+          ]}
+        ];
+
+        const renderNode = (item, depth = 0, parentPath = '') => {
+          const fullPath = parentPath + item.name;
+          const isDir = item.type === 'dir';
+          const isOpen = depth < 2;
+          
+          const div = document.createElement('div');
+          div.className = 'item' + (fullPath === currentFile ? ' active' : '');
+          div.style.paddingLeft = depth * 16 + 'px';
+          
+          if (isDir) {
+            const chevron = document.createElement('span');
+            chevron.textContent = isOpen ? '▼ ' : '▶ ';
+            chevron.style.fontSize = '10px';
+            chevron.style.display = 'inline-block';
+            chevron.style.width = '14px';
+            chevron.style.cursor = 'pointer';
+            
+            const label = document.createElement('span');
+            label.textContent = item.name;
+            label.style.cursor = 'pointer';
+            
+            div.appendChild(chevron);
+            div.appendChild(label);
+            
+            const childrenContainer = [];
+            
+            div.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const isCurrentOpen = chevron.textContent.includes('▼');
+              chevron.textContent = isCurrentOpen ? '▶ ' : '▼ ';
+              childrenContainer.forEach(child => {
+                child.style.display = isCurrentOpen ? 'none' : 'block';
+              });
+            });
+            
+            tree.appendChild(div);
+            
+            if (item.children && item.children.length > 0) {
+              item.children.forEach(child => {
+                const childDiv = document.createElement('div');
+                const childDepth = depth + 1;
+                const childFullPath = fullPath + '/' + child.name;
+                childDiv.className = 'item' + (childFullPath === currentFile ? ' active' : '');
+                childDiv.style.paddingLeft = childDepth * 16 + 'px';
+                childDiv.style.display = isOpen ? 'block' : 'none';
+                childrenContainer.push(childDiv);
+                
+                if (child.type === 'dir') {
+                  const childChevron = document.createElement('span');
+                  childChevron.textContent = depth < 1 ? '▼ ' : '▶ ';
+                  childChevron.style.fontSize = '10px';
+                  childChevron.style.display = 'inline-block';
+                  childChevron.style.width = '14px';
+                  childChevron.style.cursor = 'pointer';
+                  
+                  const childLabel = document.createElement('span');
+                  childLabel.textContent = child.name;
+                  childLabel.style.cursor = 'pointer';
+                  
+                  childDiv.appendChild(childChevron);
+                  childDiv.appendChild(childLabel);
+                  
+                  const grandchildrenContainer = [];
+                  
+                  childDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isCurrentOpen = childChevron.textContent.includes('▼');
+                    childChevron.textContent = isCurrentOpen ? '▶ ' : '▼ ';
+                    grandchildrenContainer.forEach(gc => {
+                      gc.style.display = isCurrentOpen ? 'none' : 'block';
+                    });
+                  });
+                  
+                  if (child.children && child.children.length > 0) {
+                    child.children.forEach(grandchild => {
+                      const grandchildDiv = document.createElement('div');
+                      const grandchildFullPath = childFullPath + '/' + grandchild.name;
+                      grandchildDiv.className = 'item' + (grandchildFullPath === currentFile ? ' active' : '');
+                      grandchildDiv.style.paddingLeft = (childDepth + 1) * 16 + 'px';
+                      grandchildDiv.style.display = depth < 1 ? 'block' : 'none';
+                      grandchildrenContainer.push(grandchildDiv);
+                      
+                      grandchildDiv.innerHTML = fileIconHTML(grandchild.name) + '<span>' + grandchild.name + '</span>';
+                      grandchildDiv.style.cursor = 'pointer';
+                      grandchildDiv.addEventListener('click', () => openFile(grandchildFullPath));
+                      
+                      tree.appendChild(grandchildDiv);
+                    });
+                  }
+                } else {
+                  childDiv.innerHTML = fileIconHTML(child.name) + '<span>' + child.name + '</span>';
+                  childDiv.style.cursor = 'pointer';
+                  childDiv.addEventListener('click', () => openFile(childFullPath));
+                }
+                
+                tree.appendChild(childDiv);
+              });
+            }
+          } else {
+            div.innerHTML = fileIconHTML(item.name) + '<span>' + item.name + '</span>';
+            div.style.cursor = 'pointer';
+            div.addEventListener('click', () => openFile(fullPath));
+            tree.appendChild(div);
+          }
+        };
+
+        structure.forEach(item => renderNode(item, 0, ''));
       } else {
         tree.innerHTML=`<div class="term-dim" style="padding:6px">(${view}) Placeholder</div>`;
       }
@@ -2208,14 +2983,15 @@ body {
       i.className = `codicon ${isOn ? onClass : offClass}`;
     }
     function syncToggleButtons() {
-      const isSidebarVisible = !wb.classList.contains('hide-sidebar');
+      // Use PanelManager state for floating panels
+      const isSidebarVisible = panelManager ? !panelManager.isHidden('primary') : true;
       const isPanelVisible = !wb.classList.contains('hide-panel');
-      const isAuxVisible = !wb.classList.contains('hide-auxiliary');
+      const isAuxVisible = panelManager ? !panelManager.isHidden('secondary') : true;
       const bSidebar = document.getElementById('btnSidebar');
       const bTerminal = document.getElementById('btnTerminal');
       const bChat = document.getElementById('btnChat');
       // Update icons to reflect state (on/off)
-      setToggleIcon(bSidebar, 'codicon-layout-sidebar-right', 'codicon-layout-sidebar-right-off', isSidebarVisible);
+      setToggleIcon(bSidebar, 'codicon-layout-sidebar-left', 'codicon-layout-sidebar-left-off', isSidebarVisible);
       setToggleIcon(bTerminal, 'codicon-layout-panel', 'codicon-layout-panel-off', isPanelVisible);
       setToggleIcon(bChat, 'codicon-layout-sidebar-right', 'codicon-layout-sidebar-right-off', isAuxVisible);
       bSidebar.setAttribute('aria-pressed', String(isSidebarVisible));
@@ -2247,23 +3023,25 @@ body {
       const savedPos = localStorage.getItem(ACTIVITY_POS_KEY);
       if (savedPos === 'top' || savedPos === 'left') setActivityBarPosition(savedPos, false);
     } catch {}
-    document.getElementById('btnSidebar').onclick=()=>{wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnTerminal').onclick=()=>{wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnSidebarClose').onclick=()=>{
-      wb.classList.add('hide-sidebar');
+
+    // Initialize PanelManager after DOM is ready
+    panelManager = new PanelManager();
+
+    // Title bar toggle buttons - now use PanelManager
+    document.getElementById('btnSidebar').onclick = () => {
+      if (panelManager) {
+        panelManager.toggleHide('primary');
+      }
+    };
+    document.getElementById('btnTerminal').onclick = () => {
+      wb.classList.toggle('hide-panel');
       syncToggleButtons();
       refreshEditorSoon();
     };
-    document.getElementById('btnPanelClose').onclick=()=>{
-      wb.classList.add('hide-panel');
-      syncToggleButtons();
-      refreshEditorSoon();
-    };
-    btnChat.onclick=()=>{wb.classList.toggle('hide-auxiliary');syncToggleButtons();refreshEditorSoon();};
-    document.getElementById('btnAuxClose').onclick=()=>{
-      wb.classList.add('hide-auxiliary');
-      syncToggleButtons();
-      refreshEditorSoon();
+    btnChat.onclick = () => {
+      if (panelManager) {
+        panelManager.toggleHide('secondary');
+      }
     };
 
     // Onboarding overlay
@@ -2291,8 +3069,11 @@ body {
     });
 
     const commands=[
-      {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
+      {label:'View: Toggle Sidebar',icon:'layout-sidebar-left',run:()=>{if(panelManager)panelManager.toggleHide('primary');},kbd:'Ctrl+B'},
       {label:'View: Toggle Panel',icon:'terminal',run:()=>wb.classList.toggle('hide-panel'),kbd:'Ctrl+`'},
+      {label:'View: Toggle Chat',icon:'layout-sidebar-right',run:()=>{if(panelManager)panelManager.toggleHide('secondary');}},
+      {label:'View: Dock Sidebar',icon:'layout-sidebar-left-off',run:()=>{if(panelManager)panelManager.toggleMinimize('primary');}},
+      {label:'View: Dock Chat',icon:'layout-sidebar-right-off',run:()=>{if(panelManager)panelManager.toggleMinimize('secondary');}},
       {label:'View: Move Activity Bar to Top',icon:'layout',run:()=>setActivityBarPosition(activityBarPosition==='top'?'left':'top')},
       {label:'File: Save',icon:'file',run:()=>{files.set(currentFile,ta.value);setDirty(false);saveToStorage();setStatus('Saved');},kbd:'Ctrl+S'},
       {label:'File: New File',icon:'file',run:()=>{const name=prompt('File name:','untitled.txt');if(name&&!files.has(name)){files.set(name,'');saveToStorage();openFile(name);}}},
@@ -2391,7 +3172,7 @@ body {
       if(isPaletteOpen&&e.key==='Escape'){e.preventDefault();hidePalette();return;}
       if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('commands');return;}
       if(e.ctrlKey&&!e.shiftKey&&e.key.toLowerCase()==='p'){e.preventDefault();showPalette('files');return;}
-      if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();wb.classList.toggle('hide-sidebar');syncToggleButtons();refreshEditorSoon();return;}
+      if(e.ctrlKey&&e.key.toLowerCase()==='b'){e.preventDefault();if(panelManager){panelManager.toggleHide('primary');}return;}
       if(e.ctrlKey&&e.key==='`'){e.preventDefault();wb.classList.toggle('hide-panel');syncToggleButtons();refreshEditorSoon();return;}
     });
     window.addEventListener('resize', refreshEditorSoon);
@@ -2422,6 +3203,36 @@ body {
       window.addEventListener('mouseup',()=>{
         if(!dragging)return; dragging=false; document.body.style.userSelect='';
         try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--auxiliary-w').trim()); } catch {}
+        refreshEditorSoon();
+      });
+    })();
+
+    // Sidebar resizer + persistence
+    (function setupSidebarSizer(){
+      const root = document.documentElement;
+      const LS_KEY = 'sidebar-w';
+      try {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) root.style.setProperty('--sidebar-w', saved);
+      } catch {}
+      let startX=0, startW=0, dragging=false;
+      sidebarResizer.addEventListener('mousedown', (e)=>{
+        dragging=true; startX=e.clientX;
+        const cs=getComputedStyle(root).getPropertyValue('--sidebar-w').trim();
+        startW=parseInt(cs,10)||280;
+        document.body.style.userSelect='none';
+      });
+      window.addEventListener('mousemove',(e)=>{
+        if(!dragging)return;
+        const dx=e.clientX - startX;
+        const newW=Math.max(180, Math.min(500, startW + dx));
+        root.style.setProperty('--sidebar-w', newW+'px');
+        // refresh during drag to avoid visual lag
+        refreshEditorSoon();
+      });
+      window.addEventListener('mouseup',()=>{
+        if(!dragging)return; dragging=false; document.body.style.userSelect='';
+        try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--sidebar-w').trim()); } catch {}
         refreshEditorSoon();
       });
     })();
