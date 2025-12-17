@@ -709,6 +709,35 @@
     .footer a:hover {
       text-decoration: underline;
     }
+
+    /* === VS CODE BUTTON VARIANTS (CURRENT) === */
+    .button-variants { display: grid; gap: 24px; margin-top: var(--space-4); }
+    .variant-group { display: grid; gap: 12px; }
+    .variant-group .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .split { display: inline-flex; border-radius: 4px; overflow: hidden; }
+    .split .split-toggle { width: 36px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* VS Code-like button tokens */
+    .vscode-btn { 
+      font: inherit; 
+      line-height: 22px; 
+      padding: 0 12px; 
+      border-radius: 4px; 
+      border: 1px solid transparent; 
+      background: #2a2a2a; 
+      color: #ffffff; 
+      cursor: pointer; 
+    }
+    .vscode-btn:hover:not(:disabled) { filter: brightness(1.1); }
+    .vscode-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .vscode-btn--primary { 
+      background: #0e639c; 
+      border-color: #0e639c; 
+    }
+
+    .vscode-btn--sm { line-height: 20px; padding: 0 10px; }
+    .vscode-btn--compact { line-height: 18px; padding: 0 8px; }
   </style>
 </head>
 <body>
@@ -1424,10 +1453,111 @@
 
       <!-- Current VS Code Version -->
       <div class="version-content" data-version="current">
-        <div class="empty-state">
-          <div class="empty-state-icon"><i class="codicon codicon-symbol-interface"></i></div>
-          <div class="empty-state-title">Current VS Code UI Elements</div>
-          <div class="empty-state-description">Document the current VS Code button styles, tabs, inputs, and other UI components here.</div>
+        <!-- Reference: https://github.com/microsoft/vscode-webview-ui-toolkit -->
+        <p>Variants combine color (Default, Primary, Disabled), size (Default, Small, Compact), and optional split dropdown.</p>
+
+        <div class="button-variants">
+          <!-- Default size -->
+          <div class="variant-group">
+            <h3>Default Size</h3>
+            <div class="row">
+              <button class="vscode-btn">Button</button>
+              <button class="vscode-btn vscode-btn--primary">Button</button>
+              <button class="vscode-btn" disabled>Button</button>
+            </div>
+
+            <div class="row">
+              <div class="split">
+                <button class="vscode-btn">Button</button>
+                <button class="vscode-btn split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn vscode-btn--primary">Button</button>
+                <button class="vscode-btn vscode-btn--primary split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn" disabled>Button</button>
+                <button class="vscode-btn split-toggle" disabled aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Small size -->
+          <div class="variant-group">
+            <h3>Small</h3>
+            <div class="row">
+              <button class="vscode-btn vscode-btn--sm">Button</button>
+              <button class="vscode-btn vscode-btn--sm vscode-btn--primary">Button</button>
+              <button class="vscode-btn vscode-btn--sm" disabled>Button</button>
+            </div>
+
+            <div class="row">
+              <div class="split">
+                <button class="vscode-btn vscode-btn--sm">Button</button>
+                <button class="vscode-btn vscode-btn--sm split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn vscode-btn--sm vscode-btn--primary">Button</button>
+                <button class="vscode-btn vscode-btn--sm vscode-btn--primary split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn vscode-btn--sm" disabled>Button</button>
+                <button class="vscode-btn vscode-btn--sm split-toggle" disabled aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Compact size -->
+          <div class="variant-group">
+            <h3>Compact</h3>
+            <div class="row">
+              <button class="vscode-btn vscode-btn--compact">Button</button>
+              <button class="vscode-btn vscode-btn--compact vscode-btn--primary">Button</button>
+              <button class="vscode-btn vscode-btn--compact" disabled>Button</button>
+            </div>
+
+            <div class="row">
+              <div class="split">
+                <button class="vscode-btn vscode-btn--compact">Button</button>
+                <button class="vscode-btn vscode-btn--compact split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn vscode-btn--compact vscode-btn--primary">Button</button>
+                <button class="vscode-btn vscode-btn--compact vscode-btn--primary split-toggle" aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="split">
+                <button class="vscode-btn vscode-btn--compact" disabled>Button</button>
+                <button class="vscode-btn vscode-btn--compact split-toggle" disabled aria-label="More options">
+                  <span class="codicon codicon-chevron-down" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="design-notes">
+          <h4>VS Code Webview UI Toolkit</h4>
+          <ul>
+            <li>Reference implementation: <a href="https://github.com/microsoft/vscode-webview-ui-toolkit" target="_blank">VS Code Webview UI Toolkit</a></li>
+            <li>Default, Small, and Compact size variants with Primary, Default, and Disabled states</li>
+            <li>Split button pattern uses codicon chevron-down for dropdown toggle</li>
+          </ul>
         </div>
       </div>
     </section>
