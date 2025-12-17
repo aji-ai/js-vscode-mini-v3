@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Design System — VS Code Mini</title>
+  <link rel="stylesheet" href="./assets/codicons/codicon.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      /* === PRIMARY DESIGN TOKENS === */
+      
+      /* Background Colors */
+      --bg: #1e1e1e;
+      --bg-elevated: #252526;
+      --bg-surface: #1f1f1f;
+      --bg-panel: #1b1b1b;
+      
+      /* Foreground Colors */
+      --fg: #d4d4d4;
+      --fg-muted: #6b7280;
+      --fg-emphasis: #ffffff;
+      
+      /* Accent Colors */
+      --accent: #007acc;
+      --accent-2: #3794ff;
+      --accent-hover: #1a85c4;
+      
+      /* Semantic Colors */
+      --danger: #f44747;
+      --success: #89d185;
+      --warning: #cca700;
+      
+      /* Border Colors */
+      --border: #2a2a2a;
+      --border-strong: #3a3a3a;
+      
+      /* Shadow */
+      --shadow: rgba(0, 0, 0, 0.35);
+      --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.3);
+      
+      /* Typography */
+      --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      
+      /* Font Sizes */
+      --fs-xs: 11px;
+      --fs-sm: 12px;
+      --fs-base: 13px;
+      --fs-lg: 14px;
+      --fs-xl: 16px;
+      --fs-2xl: 20px;
+      --fs-3xl: 24px;
+      
+      /* Line Heights */
+      --lh-tight: 1.2;
+      --lh-base: 1.5;
+      --lh-relaxed: 1.6;
+      
+      /* Spacing Scale (4px grid) */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      
+      /* Border Radius */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+      
+      /* Transitions */
+      --transition-fast: 0.15s ease;
+      --transition-base: 0.25s ease;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      font-size: var(--fs-base);
+      line-height: var(--lh-base);
+    }
+
+    /* === VERSION TOGGLE TABS === */
+    .version-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: var(--space-4);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-1);
+      width: fit-content;
+    }
+
+    .version-tab {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--fs-sm);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      color: var(--fg-muted);
+      background: transparent;
+      border: none;
+      font-family: var(--font-ui);
+    }
+
+    .version-tab:hover {
+      color: var(--fg);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .version-tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .version-tab.current {
+      /* Current VS Code styling */
+    }
+
+    .version-tab.proposed {
+      /* Proposed styling */
+    }
+
+    /* Version content panels */
+    .version-content {
+      display: none;
+    }
+
+    .version-content.active {
+      display: block;
+    }
+
+    /* Empty state for current version */
+    .empty-state {
+      background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      text-align: center;
+      color: var(--fg-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: var(--space-3);
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: var(--fs-lg);
+      font-weight: 600;
+      margin-bottom: var(--space-2);
+      color: var(--fg);
+    }
+
+    .empty-state-description {
+      font-size: var(--fs-sm);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    /* Comparison badge */
+    .comparison-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .comparison-badge.current {
+      background: rgba(107, 114, 128, 0.2);
+      color: #9ca3af;
+    }
+
+    .comparison-badge.proposed {
+      background: rgba(0, 122, 204, 0.2);
+      color: var(--accent-2);
+    }
+
+    .comparison-badge.changed {
+      background: rgba(137, 209, 133, 0.2);
+      color: var(--success);
+    }
+
+    /* No changes state */
+    .no-changes-state {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+      text-align: center;
+      color: var(--fg-muted);
+    }
+
+    .no-changes-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-sm);
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      background: rgba(137, 209, 133, 0.15);
+      color: var(--success);
+      margin-bottom: var(--space-3);
+    }
+
+    /* === LAYOUT === */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--space-6);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      padding: var(--space-6) 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: var(--space-8);
+    }
+
+    .header-logo {
+      width: 48px;
+      height: 48px;
+    }
+
+    .header-title {
+      font-size: var(--fs-3xl);
+      font-weight: 600;
+      color: var(--fg-emphasis);
+      margin: 0;
+    }
+
+    .header-subtitle {
+      font-size: var(--fs-base);
+      color: var(--fg-muted);
+      margin: var(--space-1) 0 0;
+    }
+
+    section {
+      margin-bottom: var(--space-8);
+      padding-bottom: var(--space-8);
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:last-child {
+      border-bottom: none;
+    }
+
+    h2 {
+      font-size: var(--fs-xl);
+      font-weight: 600;
+      color: var(--fg-emphasis);
+      margin: 0 0 var(--space-2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h3 {
+      font-size: var(--fs-lg);
+      font-weight: 600;
+      color: var(--fg);
+      margin: var(--space-6) 0 var(--space-3);
+    }
+
+    .section-description {
+      color: var(--fg-muted);
+      margin-bottom: var(--space-6);
+    }
+
+    /* === TOKEN DISPLAY === */
+    .token-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .token-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+    }
+
+    .token-name {
+      font-family: var(--font-mono);
+      font-size: var(--fs-sm);
+      color: var(--accent-2);
+      margin-bottom: var(--space-2);
+    }
+
+    .token-value {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+
+    /* === COLOR SWATCHES === */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: var(--space-4);
+    }
+
+    .color-swatch {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .color-preview {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .color-info {
+      padding: var(--space-3);
+      border-top: 1px solid var(--border);
+    }
+
+    .color-name {
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      margin-bottom: var(--space-1);
+    }
+
+    .color-value {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+
+    /* === BUTTONS === */
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      margin-bottom: var(--space-4);
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-size: var(--fs-sm);
+      font-family: var(--font-ui);
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-1);
+      transition: all var(--transition-fast);
+    }
+
+    .btn:hover {
+      border-color: var(--border-strong);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn.primary {
+      border-color: var(--accent);
+      color: #cfeaff;
+      background: rgba(0, 122, 204, 0.15);
+    }
+
+    .btn.primary:hover {
+      background: rgba(0, 122, 204, 0.25);
+    }
+
+    .btn.icon {
+      width: 28px;
+      height: 26px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .btn.plain {
+      border: none;
+      background: transparent;
+    }
+
+    .btn.plain:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* === TYPOGRAPHY RAMP === */
+    .type-sample {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: var(--space-4);
+      align-items: center;
+    }
+
+    .type-meta {
+      font-family: var(--font-mono);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+
+    .type-preview {
+      color: var(--fg);
+    }
+
+    /* === ICON GRID === */
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: var(--space-2);
+    }
+
+    .icon-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      cursor: default;
+      transition: all var(--transition-fast);
+    }
+
+    .icon-item:hover {
+      border-color: var(--accent);
+      background: rgba(0, 122, 204, 0.1);
+    }
+
+    .icon-item .codicon {
+      font-size: 20px;
+      color: var(--fg);
+    }
+
+    .icon-label {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      text-align: center;
+      word-break: break-all;
+    }
+
+    /* === PRODUCT ICON === */
+    .product-icon-display {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+      flex-wrap: wrap;
+    }
+
+    .product-icon-variant {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-3);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6);
+    }
+
+    .product-icon-variant img {
+      display: block;
+    }
+
+    .product-icon-variant .label {
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+
+    /* === COMPONENT EXAMPLES === */
+    .component-example {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+
+    .component-label {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: var(--space-3);
+    }
+
+    /* Tab Example */
+    .tabs-example {
+      display: flex;
+      gap: 1px;
+      background: var(--border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+
+    .tab-example {
+      background: var(--bg-panel);
+      padding: var(--space-2) var(--space-3);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .tab-example:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-example.active {
+      background: var(--bg);
+      color: var(--fg-emphasis);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Input Example */
+    .input-example {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--fg);
+      border-radius: var(--radius-lg);
+      padding: var(--space-2) var(--space-3);
+      font-family: var(--font-ui);
+      font-size: var(--fs-base);
+      width: 100%;
+      max-width: 320px;
+      outline: none;
+      transition: border-color var(--transition-fast);
+    }
+
+    .input-example:focus {
+      border-color: var(--accent);
+    }
+
+    .input-example::placeholder {
+      color: var(--fg-muted);
+    }
+
+    /* Panel Header Example */
+    .panel-header-example {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-2) var(--space-3);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .panel-title-example {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--fg-muted);
+    }
+
+    .panel-controls-example {
+      display: flex;
+      gap: var(--space-1);
+    }
+
+    /* Activity Bar Item */
+    .activity-item-example {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--fg-muted);
+      cursor: pointer;
+      position: relative;
+      transition: all var(--transition-fast);
+    }
+
+    .activity-item-example:hover {
+      color: var(--fg-emphasis);
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: var(--radius-lg);
+    }
+
+    .activity-item-example.active {
+      color: var(--fg-emphasis);
+    }
+
+    .activity-item-example.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--accent);
+    }
+
+    /* Status Bar */
+    .statusbar-example {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-1) var(--space-3);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+    }
+
+    .status-item-example {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+
+    /* Tree Item */
+    .tree-example {
+      font-size: var(--fs-sm);
+    }
+
+    .tree-item-example {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-1) var(--space-2);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition-fast);
+    }
+
+    .tree-item-example:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tree-item-example.active {
+      background: rgba(0, 122, 204, 0.18);
+      outline: 1px solid rgba(0, 122, 204, 0.25);
+    }
+
+    /* Notes */
+    .design-notes {
+      background: rgba(0, 122, 204, 0.1);
+      border: 1px solid rgba(0, 122, 204, 0.25);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-top: var(--space-4);
+    }
+
+    .design-notes h4 {
+      font-size: var(--fs-sm);
+      color: var(--accent-2);
+      margin: 0 0 var(--space-2);
+    }
+
+    .design-notes ul {
+      margin: 0;
+      padding-left: var(--space-5);
+      color: var(--fg-muted);
+      font-size: var(--fs-sm);
+    }
+
+    .design-notes li {
+      margin-bottom: var(--space-1);
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: var(--space-6) 0;
+      color: var(--fg-muted);
+      font-size: var(--fs-sm);
+    }
+
+    .footer a {
+      color: var(--accent-2);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <img class="header-logo" src="./assets/visual-studio-code-icons/vscode.svg" alt="VS Code" />
+      <div>
+        <h1 class="header-title">Design System</h1>
+        <p class="header-subtitle">VS Code Mini Prototype — Comparing current VS Code with proposed design changes</p>
+      </div>
+    </header>
+
+    <!-- Product Icon -->
+    <section data-section="product-icon">
+      <h2>Product Icon</h2>
+      <p class="section-description">The official Visual Studio Code product icon used throughout the prototype.</p>
+      
+      <div class="version-toggle">
+        <button class="version-tab active" data-version="proposed">Proposed</button>
+        <button class="version-tab" data-version="current">Current VS Code</button>
+      </div>
+
+      <!-- Proposed Version -->
+      <div class="version-content active" data-version="proposed">
+        <div class="product-icon-display">
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="VS Code Proposed Icon" width="64" height="64" />
+            <span class="label">vscode-proposed.svg (64×64)</span>
+          </div>
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode-proposed.svg" alt="VS Code Proposed Icon" width="32" height="32" />
+            <span class="label">vscode-proposed.svg (32×32)</span>
+          </div>
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode-proposed-alt.svg" alt="VS Code Proposed Alt Icon" width="64" height="64" />
+            <span class="label">vscode-proposed-alt.svg (64×64)</span>
+          </div>
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode-proposed-alt.svg" alt="VS Code Proposed Alt Icon" width="32" height="32" />
+            <span class="label">vscode-proposed-alt.svg (32×32)</span>
+          </div>
+        </div>
+
+        <div class="design-notes">
+          <h4>Usage Notes</h4>
+          <ul>
+            <li>New proposed design variants for VS Code product icon</li>
+            <li>Two design directions being explored</li>
+            <li>Test rendering at various sizes for clarity</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Current VS Code Version -->
+      <div class="version-content" data-version="current">
+        <div class="product-icon-display">
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode.svg" alt="VS Code Logo" width="64" height="64" />
+            <span class="label">vscode.svg (64×64)</span>
+          </div>
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode.svg" alt="VS Code Logo" width="32" height="32" />
+            <span class="label">vscode.svg (32×32)</span>
+          </div>
+          <div class="product-icon-variant">
+            <img src="./assets/visual-studio-code-icons/vscode.svg" alt="VS Code Logo" width="16" height="16" />
+            <span class="label">vscode.svg (16×16)</span>
+          </div>
+          <div class="product-icon-variant">
+            <i class="codicon codicon-vscode" style="font-size: 48px;"></i>
+            <span class="label">codicon-vscode</span>
+          </div>
+        </div>
+
+        <div class="design-notes">
+          <h4>Usage Notes</h4>
+          <ul>
+            <li>Use the SVG version for crisp rendering at all sizes</li>
+            <li>The codicon glyph is available for icon-only contexts</li>
+            <li>PNG versions available for contexts requiring raster images</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Color Tokens -->
+    <section data-section="color-tokens">
+      <h2>Color Tokens</h2>
+      <p class="section-description">Core color palette for the default dark theme.</p>
+
+      <div class="version-toggle">
+        <button class="version-tab active" data-version="proposed">Proposed</button>
+        <button class="version-tab" data-version="current">Current VS Code</button>
+      </div>
+
+      <!-- Proposed Version -->
+      <div class="version-content active" data-version="proposed">
+        <h3>Background Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1e1e1e;"></div>
+            <div class="color-info">
+              <div class="color-name">--bg</div>
+              <div class="color-value">#1e1e1e</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #252526;"></div>
+            <div class="color-info">
+              <div class="color-name">--bg-elevated</div>
+              <div class="color-value">#252526</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1f1f1f;"></div>
+            <div class="color-info">
+              <div class="color-name">--bg-surface</div>
+              <div class="color-value">#1f1f1f</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1b1b1b;"></div>
+            <div class="color-info">
+              <div class="color-name">--bg-panel</div>
+              <div class="color-value">#1b1b1b</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Foreground Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1e1e1e;"><span style="color: #d4d4d4; font-size: 24px;">Aa</span></div>
+            <div class="color-info">
+              <div class="color-name">--fg</div>
+              <div class="color-value">#d4d4d4</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1e1e1e;"><span style="color: #6b7280; font-size: 24px;">Aa</span></div>
+            <div class="color-info">
+              <div class="color-name">--fg-muted</div>
+              <div class="color-value">#6b7280</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #1e1e1e;"><span style="color: #ffffff; font-size: 24px;">Aa</span></div>
+            <div class="color-info">
+              <div class="color-name">--fg-emphasis</div>
+              <div class="color-value">#ffffff</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Accent Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #007acc;"></div>
+            <div class="color-info">
+              <div class="color-name">--accent</div>
+              <div class="color-value">#007acc</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #3794ff;"></div>
+            <div class="color-info">
+              <div class="color-name">--accent-2</div>
+              <div class="color-value">#3794ff</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Semantic Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #f44747;"></div>
+            <div class="color-info">
+              <div class="color-name">--danger</div>
+              <div class="color-value">#f44747</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #89d185;"></div>
+            <div class="color-info">
+              <div class="color-name">--success</div>
+              <div class="color-value">#89d185</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #cca700;"></div>
+            <div class="color-info">
+              <div class="color-name">--warning</div>
+              <div class="color-value">#cca700</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Border Colors</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #2a2a2a; border: 2px solid #2a2a2a;"></div>
+            <div class="color-info">
+              <div class="color-name">--border</div>
+              <div class="color-value">#2a2a2a</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #3a3a3a; border: 2px solid #3a3a3a;"></div>
+            <div class="color-info">
+              <div class="color-name">--border-strong</div>
+              <div class="color-value">#3a3a3a</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current VS Code Version -->
+      <div class="version-content" data-version="current">
+        <h3>Dark Base</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #FFFFFF;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 01</div>
+              <div class="color-value">#FFFFFF</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #F0F0F0;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 02</div>
+              <div class="color-value">#F0F0F0</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #E7E7E7;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 03</div>
+              <div class="color-value">#E7E7E7</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #E5E5E5;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 04</div>
+              <div class="color-value">#E5E5E5</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #D4D4D4;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 05</div>
+              <div class="color-value">#D4D4D4</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #CCCCCC;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 06</div>
+              <div class="color-value">#CCCCCC</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #C6C6C6;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 07</div>
+              <div class="color-value">#C6C6C6</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #BBBBBB;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 08</div>
+              <div class="color-value">#BBBBBB</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #A0A0A0;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 09</div>
+              <div class="color-value">#A0A0A0</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #808080;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 10</div>
+              <div class="color-value">#808080</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Dark Accent</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #75BEFF;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 01</div>
+              <div class="color-value">#75BEFF</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #40A6FF;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 02</div>
+              <div class="color-value">#40A6FF</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #3399CC;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 03</div>
+              <div class="color-value">#3399CC</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #3794FF;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 04</div>
+              <div class="color-value">#3794FF</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Light Base</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #FFFFFF;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 01</div>
+              <div class="color-value">#FFFFFF</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #F0F0F0;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 02</div>
+              <div class="color-value">#F0F0F0</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #E7E7E7;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 03</div>
+              <div class="color-value">#E7E7E7</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #E5E5E5;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 04</div>
+              <div class="color-value">#E5E5E5</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #D4D4D4;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 05</div>
+              <div class="color-value">#D4D4D4</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #CCCCCC;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 06</div>
+              <div class="color-value">#CCCCCC</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #C6C6C6;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 07</div>
+              <div class="color-value">#C6C6C6</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #BBBBBB;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 08</div>
+              <div class="color-value">#BBBBBB</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #A0A0A0;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 09</div>
+              <div class="color-value">#A0A0A0</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #888888;"></div>
+            <div class="color-info">
+              <div class="color-name">Base 10</div>
+              <div class="color-value">#888888</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Light Accent</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #75BEFF;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 01</div>
+              <div class="color-value">#75BEFF</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #40A6FF;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue 02</div>
+              <div class="color-value">#40A6FF</div>
+            </div>
+          </div>
+        </div>
+
+        <h3>Seti</h3>
+        <div class="color-grid">
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #519ABA;"></div>
+            <div class="color-info">
+              <div class="color-name">Blue</div>
+              <div class="color-value">#519ABA</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #8DC149;"></div>
+            <div class="color-info">
+              <div class="color-name">Green</div>
+              <div class="color-value">#8DC149</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #E37933;"></div>
+            <div class="color-info">
+              <div class="color-name">Orange</div>
+              <div class="color-value">#E37933</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #F55385;"></div>
+            <div class="color-info">
+              <div class="color-name">Pink</div>
+              <div class="color-value">#F55385</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #CC3E44;"></div>
+            <div class="color-info">
+              <div class="color-name">Red</div>
+              <div class="color-value">#CC3E44</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #7494A3;"></div>
+            <div class="color-info">
+              <div class="color-name">Steel</div>
+              <div class="color-value">#7494A3</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #CBCB41;"></div>
+            <div class="color-info">
+              <div class="color-name">Yellow</div>
+              <div class="color-value">#CBCB41</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #A074C4;"></div>
+            <div class="color-info">
+              <div class="color-name">Purple</div>
+              <div class="color-value">#A074C4</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #41535B;"></div>
+            <div class="color-info">
+              <div class="color-name">Ignore</div>
+              <div class="color-value">#41535B</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #D4D7D6;"></div>
+            <div class="color-info">
+              <div class="color-name">White</div>
+              <div class="color-value">#D4D7D6</div>
+            </div>
+          </div>
+          <div class="color-swatch">
+            <div class="color-preview" style="background: #6D8086;"></div>
+            <div class="color-info">
+              <div class="color-name">Gray</div>
+              <div class="color-value">#6D8086</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Typography -->
+    <section data-section="typography">
+      <h2>Typography</h2>
+      <p class="section-description">Font families and size scale used throughout the interface.</p>
+
+      <div class="version-toggle">
+        <button class="version-tab active" data-version="proposed">Proposed</button>
+        <button class="version-tab" data-version="current">Current VS Code</button>
+      </div>
+
+      <!-- Proposed Version -->
+      <div class="version-content active" data-version="proposed">
+        <h3>Font Families</h3>
+        <div class="token-grid">
+          <div class="token-card">
+            <div class="token-name">--font-ui</div>
+            <div class="token-value">ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial</div>
+            <p style="margin-top: var(--space-3); font-family: var(--font-ui);">The quick brown fox jumps over the lazy dog.</p>
+          </div>
+          <div class="token-card">
+            <div class="token-name">--font-mono</div>
+            <div class="token-value">ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas</div>
+            <p style="margin-top: var(--space-3); font-family: var(--font-mono);">const greeting = "Hello, World!";</p>
+          </div>
+        </div>
+
+        <h3>Type Scale</h3>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-3xl</div>
+            <div>24px</div>
+          </div>
+          <div class="type-preview" style="font-size: 24px;">The quick brown fox</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-2xl</div>
+            <div>20px</div>
+          </div>
+          <div class="type-preview" style="font-size: 20px;">The quick brown fox</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-xl</div>
+            <div>16px</div>
+          </div>
+          <div class="type-preview" style="font-size: 16px;">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-lg</div>
+            <div>14px</div>
+          </div>
+          <div class="type-preview" style="font-size: 14px;">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-base</div>
+            <div>13px</div>
+          </div>
+          <div class="type-preview" style="font-size: 13px;">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-sm</div>
+            <div>12px</div>
+          </div>
+          <div class="type-preview" style="font-size: 12px;">The quick brown fox jumps over the lazy dog</div>
+        </div>
+        <div class="type-sample">
+          <div class="type-meta">
+            <div>--fs-xs</div>
+            <div>11px</div>
+          </div>
+          <div class="type-preview" style="font-size: 11px;">The quick brown fox jumps over the lazy dog</div>
+        </div>
+
+        <div class="design-notes">
+          <h4>Typography Guidelines</h4>
+          <ul>
+            <li>Use <code>--font-ui</code> for all interface text (buttons, labels, navigation)</li>
+            <li>Use <code>--font-mono</code> for code, terminal output, and technical values</li>
+            <li>Default UI size is 12-13px; code editor uses 13px</li>
+            <li>Panel titles use 11px uppercase with letter-spacing: 0.06em</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Current VS Code Version -->
+      <div class="version-content" data-version="current">
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="codicon codicon-text-size"></i></div>
+          <div class="empty-state-title">Current VS Code Typography</div>
+          <div class="empty-state-description">Document the current VS Code font families, sizes, and type scale here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Buttons & UI Elements -->
+    <section data-section="ui-elements">
+      <h2>Buttons & UI Elements</h2>
+      <p class="section-description">Interactive components and their states.</p>
+
+      <div class="version-toggle">
+        <button class="version-tab active" data-version="proposed">Proposed</button>
+        <button class="version-tab" data-version="current">Current VS Code</button>
+      </div>
+
+      <!-- Proposed Version -->
+      <div class="version-content active" data-version="proposed">
+        <h3>Button Variants</h3>
+        <div class="component-example">
+          <div class="component-label">Default Buttons</div>
+          <div class="button-row">
+            <button class="btn">Default</button>
+            <button class="btn primary">Primary</button>
+            <button class="btn"><i class="codicon codicon-add"></i> With Icon</button>
+            <button class="btn icon"><i class="codicon codicon-close"></i></button>
+            <button class="btn plain"><i class="codicon codicon-settings-gear"></i></button>
+          </div>
+        </div>
+
+        <div class="design-notes">
+          <h4>Button Styling Rules</h4>
+          <ul>
+            <li>Default buttons use transparent background with <code>--border</code> stroke</li>
+            <li>Primary buttons use accent color border with subtle background tint</li>
+            <li>Icon buttons are 28×26px with centered content</li>
+            <li>All buttons have 6px border-radius and 0.15s hover transition</li>
+            <li>Hover state adds slight background lightening and stronger border</li>
+          </ul>
+        </div>
+
+        <h3>Tabs</h3>
+        <div class="component-example">
+          <div class="component-label">Editor Tabs</div>
+          <div class="tabs-example">
+            <div class="tab-example active">
+              <i class="codicon codicon-file-code"></i>
+              <span>app.js</span>
+            </div>
+            <div class="tab-example">
+              <i class="codicon codicon-file"></i>
+              <span>README.md</span>
+            </div>
+            <div class="tab-example">
+              <i class="codicon codicon-file-code"></i>
+              <span>style.css</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>Input Fields</h3>
+        <div class="component-example">
+          <div class="component-label">Text Input</div>
+          <input class="input-example" type="text" placeholder="Search files..." />
+        </div>
+
+        <h3>Panel Headers</h3>
+        <div class="component-example">
+          <div class="component-label">Collapsible Panel Header</div>
+          <div class="panel-header-example">
+            <span class="panel-title-example">Explorer</span>
+            <div class="panel-controls-example">
+              <button class="btn icon plain"><i class="codicon codicon-eye-closed"></i></button>
+              <button class="btn icon plain"><i class="codicon codicon-screen-full"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <h3>Activity Bar Items</h3>
+        <div class="component-example">
+          <div class="component-label">Activity Bar Icons</div>
+          <div style="display: flex; background: var(--bg-elevated); border-radius: var(--radius-md); width: fit-content;">
+            <div class="activity-item-example active">
+              <i class="codicon codicon-files"></i>
+            </div>
+            <div class="activity-item-example">
+              <i class="codicon codicon-search"></i>
+            </div>
+            <div class="activity-item-example">
+              <i class="codicon codicon-source-control"></i>
+            </div>
+            <div class="activity-item-example">
+              <i class="codicon codicon-debug-alt"></i>
+            </div>
+          </div>
+        </div>
+
+        <h3>Status Bar</h3>
+        <div class="component-example">
+          <div class="component-label">Status Bar Items</div>
+          <div class="statusbar-example">
+            <span class="status-item-example">
+              <i class="codicon codicon-info"></i>
+              Ready
+            </span>
+            <span class="status-item-example">
+              <i class="codicon codicon-git-branch"></i>
+              main
+            </span>
+            <span class="status-item-example">Ln 1, Col 1</span>
+          </div>
+        </div>
+
+        <h3>Tree Items</h3>
+        <div class="component-example">
+          <div class="component-label">File Explorer Items</div>
+          <div class="tree-example">
+            <div class="tree-item-example">
+              <i class="codicon codicon-folder"></i>
+              <span>src</span>
+            </div>
+            <div class="tree-item-example active" style="padding-left: 24px;">
+              <i class="codicon codicon-file-code"></i>
+              <span>app.js</span>
+            </div>
+            <div class="tree-item-example" style="padding-left: 24px;">
+              <i class="codicon codicon-file"></i>
+              <span>README.md</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Current VS Code Version -->
+      <div class="version-content" data-version="current">
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="codicon codicon-symbol-interface"></i></div>
+          <div class="empty-state-title">Current VS Code UI Elements</div>
+          <div class="empty-state-description">Document the current VS Code button styles, tabs, inputs, and other UI components here.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Codicon Icon Set -->
+    <section data-section="codicon-icons">
+      <h2>Codicon Icon Set</h2>
+      <p class="section-description">Microsoft's official icon font for VS Code. The full set includes 400+ icons.</p>
+
+      <!-- No Changes Proposed -->
+      <div class="no-changes-state">
+        <div class="no-changes-badge"><i class="codicon codicon-check"></i> No changes proposed</div>
+      </div>
+
+      <h3 style="margin-top: var(--space-6);">Icon Reference</h3>
+      <p class="section-description">Common icons used throughout the prototype:</p>
+        <div class="icon-grid">
+          <div class="icon-item"><i class="codicon codicon-files"></i><span class="icon-label">files</span></div>
+          <div class="icon-item"><i class="codicon codicon-search"></i><span class="icon-label">search</span></div>
+          <div class="icon-item"><i class="codicon codicon-source-control"></i><span class="icon-label">source-control</span></div>
+          <div class="icon-item"><i class="codicon codicon-debug-alt"></i><span class="icon-label">debug-alt</span></div>
+          <div class="icon-item"><i class="codicon codicon-extensions"></i><span class="icon-label">extensions</span></div>
+          <div class="icon-item"><i class="codicon codicon-settings-gear"></i><span class="icon-label">settings-gear</span></div>
+          <div class="icon-item"><i class="codicon codicon-close"></i><span class="icon-label">close</span></div>
+          <div class="icon-item"><i class="codicon codicon-add"></i><span class="icon-label">add</span></div>
+          <div class="icon-item"><i class="codicon codicon-remove"></i><span class="icon-label">remove</span></div>
+          <div class="icon-item"><i class="codicon codicon-refresh"></i><span class="icon-label">refresh</span></div>
+          <div class="icon-item"><i class="codicon codicon-terminal"></i><span class="icon-label">terminal</span></div>
+          <div class="icon-item"><i class="codicon codicon-folder"></i><span class="icon-label">folder</span></div>
+          <div class="icon-item"><i class="codicon codicon-file"></i><span class="icon-label">file</span></div>
+          <div class="icon-item"><i class="codicon codicon-file-code"></i><span class="icon-label">file-code</span></div>
+          <div class="icon-item"><i class="codicon codicon-save"></i><span class="icon-label">save</span></div>
+          <div class="icon-item"><i class="codicon codicon-edit"></i><span class="icon-label">edit</span></div>
+        </div>
+
+        <h3>Layout Icons</h3>
+        <div class="icon-grid">
+          <div class="icon-item"><i class="codicon codicon-layout-sidebar-left"></i><span class="icon-label">layout-sidebar-left</span></div>
+          <div class="icon-item"><i class="codicon codicon-layout-sidebar-right"></i><span class="icon-label">layout-sidebar-right</span></div>
+          <div class="icon-item"><i class="codicon codicon-layout-panel"></i><span class="icon-label">layout-panel</span></div>
+          <div class="icon-item"><i class="codicon codicon-layout-sidebar-left-off"></i><span class="icon-label">layout-sidebar-left-off</span></div>
+          <div class="icon-item"><i class="codicon codicon-layout-sidebar-right-off"></i><span class="icon-label">layout-sidebar-right-off</span></div>
+          <div class="icon-item"><i class="codicon codicon-layout-panel-off"></i><span class="icon-label">layout-panel-off</span></div>
+          <div class="icon-item"><i class="codicon codicon-screen-full"></i><span class="icon-label">screen-full</span></div>
+          <div class="icon-item"><i class="codicon codicon-screen-normal"></i><span class="icon-label">screen-normal</span></div>
+          <div class="icon-item"><i class="codicon codicon-split-horizontal"></i><span class="icon-label">split-horizontal</span></div>
+          <div class="icon-item"><i class="codicon codicon-split-vertical"></i><span class="icon-label">split-vertical</span></div>
+        </div>
+
+        <h3>Chat & AI Icons</h3>
+        <div class="icon-grid">
+          <div class="icon-item"><i class="codicon codicon-copilot"></i><span class="icon-label">copilot</span></div>
+          <div class="icon-item"><i class="codicon codicon-sparkle"></i><span class="icon-label">sparkle</span></div>
+          <div class="icon-item"><i class="codicon codicon-chat-sparkle"></i><span class="icon-label">chat-sparkle</span></div>
+          <div class="icon-item"><i class="codicon codicon-comment-discussion"></i><span class="icon-label">comment-discussion</span></div>
+          <div class="icon-item"><i class="codicon codicon-send"></i><span class="icon-label">send</span></div>
+          <div class="icon-item"><i class="codicon codicon-mic"></i><span class="icon-label">mic</span></div>
+          <div class="icon-item"><i class="codicon codicon-attach"></i><span class="icon-label">attach</span></div>
+          <div class="icon-item"><i class="codicon codicon-robot"></i><span class="icon-label">robot</span></div>
+        </div>
+
+        <h3>Navigation Icons</h3>
+        <div class="icon-grid">
+          <div class="icon-item"><i class="codicon codicon-chevron-down"></i><span class="icon-label">chevron-down</span></div>
+          <div class="icon-item"><i class="codicon codicon-chevron-right"></i><span class="icon-label">chevron-right</span></div>
+          <div class="icon-item"><i class="codicon codicon-chevron-up"></i><span class="icon-label">chevron-up</span></div>
+          <div class="icon-item"><i class="codicon codicon-chevron-left"></i><span class="icon-label">chevron-left</span></div>
+          <div class="icon-item"><i class="codicon codicon-arrow-up"></i><span class="icon-label">arrow-up</span></div>
+          <div class="icon-item"><i class="codicon codicon-arrow-down"></i><span class="icon-label">arrow-down</span></div>
+          <div class="icon-item"><i class="codicon codicon-arrow-left"></i><span class="icon-label">arrow-left</span></div>
+          <div class="icon-item"><i class="codicon codicon-arrow-right"></i><span class="icon-label">arrow-right</span></div>
+        </div>
+
+        <h3>Status Icons</h3>
+        <div class="icon-grid">
+          <div class="icon-item"><i class="codicon codicon-check"></i><span class="icon-label">check</span></div>
+          <div class="icon-item"><i class="codicon codicon-error"></i><span class="icon-label">error</span></div>
+          <div class="icon-item"><i class="codicon codicon-warning"></i><span class="icon-label">warning</span></div>
+          <div class="icon-item"><i class="codicon codicon-info"></i><span class="icon-label">info</span></div>
+          <div class="icon-item"><i class="codicon codicon-loading codicon-modifier-spin"></i><span class="icon-label">loading</span></div>
+          <div class="icon-item"><i class="codicon codicon-pass"></i><span class="icon-label">pass</span></div>
+          <div class="icon-item"><i class="codicon codicon-circle-filled"></i><span class="icon-label">circle-filled</span></div>
+          <div class="icon-item"><i class="codicon codicon-eye"></i><span class="icon-label">eye</span></div>
+          <div class="icon-item"><i class="codicon codicon-eye-closed"></i><span class="icon-label">eye-closed</span></div>
+        </div>
+
+        <div class="design-notes">
+          <h4>Icon Usage Guidelines</h4>
+          <ul>
+            <li>Default icon size is 16×16px (<code>font-size: 16px</code>)</li>
+            <li>Icons inherit color from parent element</li>
+            <li>Use <code>.codicon-modifier-spin</code> for animated loading states</li>
+            <li>Full icon list: <a href="https://microsoft.github.io/vscode-codicons/dist/codicon.html" target="_blank">Codicon Reference</a></li>
+          </ul>
+        </div>
+    </section>
+
+    <!-- Spacing & Layout -->
+    <section data-section="spacing-layout">
+      <h2>Spacing & Layout</h2>
+      <p class="section-description">Consistent spacing scale for margins, padding, and gaps.</p>
+
+      <!-- No Changes Proposed -->
+      <div class="no-changes-state">
+        <div class="no-changes-badge"><i class="codicon codicon-check"></i> No changes proposed</div>
+      </div>
+
+      <h3 style="margin-top: var(--space-6);">Spacing Reference</h3>
+      <p class="section-description">Spacing tokens based on a 4px grid system:</p>
+      
+      <div class="token-grid">
+        <div class="token-card">
+          <div class="token-name">--space-1</div>
+          <div class="token-value">4px</div>
+          <div style="margin-top: var(--space-2); width: 4px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-2</div>
+          <div class="token-value">8px</div>
+          <div style="margin-top: var(--space-2); width: 8px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-3</div>
+          <div class="token-value">12px</div>
+          <div style="margin-top: var(--space-2); width: 12px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-4</div>
+          <div class="token-value">16px</div>
+          <div style="margin-top: var(--space-2); width: 16px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-5</div>
+          <div class="token-value">20px</div>
+          <div style="margin-top: var(--space-2); width: 20px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-6</div>
+          <div class="token-value">24px</div>
+          <div style="margin-top: var(--space-2); width: 24px; height: 16px; background: var(--accent);"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--space-8</div>
+          <div class="token-value">32px</div>
+          <div style="margin-top: var(--space-2); width: 32px; height: 16px; background: var(--accent);"></div>
+        </div>
+      </div>
+
+      <h3>Border Radius</h3>
+      <div class="token-grid">
+        <div class="token-card">
+          <div class="token-name">--radius-sm</div>
+          <div class="token-value">4px</div>
+          <div style="margin-top: var(--space-2); width: 48px; height: 32px; background: var(--accent); border-radius: 4px;"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--radius-md</div>
+          <div class="token-value">6px</div>
+          <div style="margin-top: var(--space-2); width: 48px; height: 32px; background: var(--accent); border-radius: 6px;"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--radius-lg</div>
+          <div class="token-value">8px</div>
+          <div style="margin-top: var(--space-2); width: 48px; height: 32px; background: var(--accent); border-radius: 8px;"></div>
+        </div>
+        <div class="token-card">
+          <div class="token-name">--radius-xl</div>
+          <div class="token-value">12px</div>
+          <div style="margin-top: var(--space-2); width: 48px; height: 32px; background: var(--accent); border-radius: 12px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>VS Code Mini Design System • Last updated: December 2024</p>
+      <p><a href="./index.html">← Back to Prototype</a></p>
+    </footer>
+  </div>
+
+  <!-- JavaScript for tab switching -->
+  <script>
+    // Tab switching functionality
+    document.querySelectorAll('.version-toggle').forEach(toggle => {
+      const section = toggle.closest('section');
+      const tabs = toggle.querySelectorAll('.version-tab');
+      const contents = section.querySelectorAll('.version-content');
+
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          const version = tab.dataset.version;
+
+          // Update active tab
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+
+          // Update visible content
+          contents.forEach(content => {
+            content.classList.toggle('active', content.dataset.version === version);
+          });
+        });
+      });
+    });
+
+    // Global toggle to switch all sections at once
+    let globalVersion = 'proposed';
+
+    // Add keyboard shortcut to toggle all (Shift + T)
+    document.addEventListener('keydown', (e) => {
+      if (e.shiftKey && e.key.toLowerCase() === 't') {
+        globalVersion = globalVersion === 'proposed' ? 'current' : 'proposed';
+        
+        document.querySelectorAll('.version-toggle').forEach(toggle => {
+          const section = toggle.closest('section');
+          const tabs = toggle.querySelectorAll('.version-tab');
+          const contents = section.querySelectorAll('.version-content');
+
+          tabs.forEach(t => t.classList.toggle('active', t.dataset.version === globalVersion));
+          contents.forEach(c => c.classList.toggle('active', c.dataset.version === globalVersion));
+        });
+      }
+    });
+  </script>
+</body>
+</html>
