@@ -82,7 +82,8 @@
       --lh-code: 1.6;
 
       --activity-w: 48px;
-      --sidebar-w: 280px;
+      /* Responsive sidebar width so narrow windows don't cause horizontal overflow/overdraw */
+      --sidebar-w: clamp(200px, 24vw, 280px);
       --titlebar-h: 34px;
       --statusbar-h: 22px;
 
@@ -139,8 +140,6 @@
 
     .titlebar {
       background: var(--titlebar-bg);
-      height: var(--titlebar-h);
-      line-height: 22px;
       border-bottom: 1px solid var(--border);
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -148,26 +147,54 @@
       padding: 0 10px;
       gap: 10px;
       user-select: none;
+      position: relative; /* allow true absolute centering of command center */
     }
 
     .title-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .title-center { justify-self: center; display: flex; align-items: center; gap: 6px; }
+    /* Title center: truly center #projectQuick in the window, and hang the chat button off its right edge */
+    .title-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: inline-block;
+      pointer-events: auto;
+    }
+    .title-center .menu-wrap {
+      position: absolute;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    /* Give the chat-menu button a bit more breathing room next to the command center */
+    #btnChatMenu {
+      width: auto;
+      padding: 0 8px 0 10px;
+      gap: 6px;
+    }
     .window-dots { display: flex; gap: 6px; }
     .dot { width: 10px; height: 10px; border-radius: 999px; background: #555; }
     .dot.red { background: #ff5f57; }
     .dot.yellow { background: #febc2e; }
     .dot.green { background: #28c840; }
     .title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--titlebar-fg, var(--muted)); }
-    .title-actions { display: flex; gap: 4px; align-items: center; }
+    .title-actions { display: flex; gap: 6px; align-items: center; }
     .titlebar .btn { color: var(--titlebar-fg, var(--fg)); }
+    /* Keep window controls flush-right regardless of centered command center */
+    .title-actions{
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 70;
+    }
 
     /* Command Center (project quick palette) */
     .project-quick {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      height: 22px;
-      padding: 0 10px;
+      padding: 4px 10px;
       border-radius: 6px;
       border: 1px solid var(--border, #2a2a2a);
       background: var(--command-bg, rgba(255,255,255,0.02));
@@ -285,21 +312,202 @@
     .chat-bubble.user { align-self: flex-end; background: rgba(0,122,204,.18); border:1px solid rgba(0,122,204,.25); }
     .chat-bubble.bot { align-self: flex-start; background: rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.08); }
     .chat-composer {
-      display: flex;
-      align-items: center;
-      gap: 12px;
       padding: 10px;
       border-top: 1px solid var(--border, #2a2a2a);
       background: var(--panel-bg, #1b1b1b);
     }
-    .aux-chat-bar {
+    /* Cursor-like chat composer (shared by aux + standalone) */
+    .composer {
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.03);
+      border-radius: 8px;
+      padding: 10px 10px;
+      display: grid;
+      grid-template-rows: auto auto auto;
+      gap: 10px;
+    }
+    .composer-top {
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 6px 10px;
-      border: none;
-      background: var(--panel-bg, #1b1b1b);
+      min-height: 26px;
     }
+    .composer-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .iconbtn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.02);
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .iconbtn:hover { background: rgba(255,255,255,.06); color: var(--fg); }
+    .iconbtn.plain {
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .iconbtn.plain:hover { background: rgba(255,255,255,.06); }
+    .composer-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      min-width: 0;
+      flex: 1;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      color: var(--fg);
+      max-width: 75%;
+      width: fit-content;
+      flex: 0 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chip .codicon { opacity: .9; }
+    .chip .chip-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .chip-x {
+      width: 18px;
+      height: 18px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .chip-x:hover { background: rgba(255,255,255,.08); color: var(--fg); }
+    .composer-input textarea,
+    .composer-input input {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--fg);
+      font-family: var(--font-ui);
+      /* Match workbench UI scale (Cursor prompt is larger, but not huge) */
+      font-size: 16px;
+      line-height: 1.35;
+      padding: 4px 2px 6px;
+      min-height: 52px;
+    }
+    .composer-input textarea::placeholder,
+    .composer-input input::placeholder {
+      /* Lower contrast placeholder driven by theme tokens */
+      color: var(--muted);
+    }
+    .composer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 34px;
+    }
+    .composer-left,
+    .composer-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .composer-right { justify-content: flex-end; flex-shrink: 0; }
+
+    /* Remove focus/blue highlight visuals inside composer */
+    .composer, .composer * { -webkit-tap-highlight-color: transparent; }
+    .composer button:focus,
+    .composer button:focus-visible,
+    .composer textarea:focus,
+    .composer textarea:focus-visible {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Keep the copilot pill style; slightly smaller in composer */
+    .composer .copilot-pill {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    .composer .copilot-pill.copilot-active {
+      color: var(--accent) !important;
+    }
+
+    /* Custom dropdowns (Cursor-like) */
+    .dd { position: relative; display: inline-flex; align-items: center; }
+    .dd-btn {
+      border: 0;
+      background: transparent;
+      color: var(--fg);
+      font-family: var(--font-ui);
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dd-btn:hover { background: rgba(255,255,255,.06); }
+    .dd-btn .dd-label { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .dd-btn .dd-chev { color: var(--muted); font-size: 12px; }
+    .dd-menu {
+      position: absolute;
+      left: 0;
+      top: calc(100% + 8px);
+      min-width: 180px;
+      background: var(--menu-bg, #1f1f1f);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 10px;
+      box-shadow: 0 18px 60px var(--shadow);
+      padding: 6px;
+      display: none;
+      z-index: 200;
+      max-height: min(240px, 40vh);
+      overflow: auto;
+    }
+    .dd.open .dd-menu { display: block; }
+    .dd.up .dd-menu {
+      top: auto;
+      bottom: calc(100% + 8px);
+    }
+    .dd-item {
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--fg);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      user-select: none;
+    }
+    .dd-item:hover { background: rgba(255,255,255,.06); }
+    .dd-item .dd-check { color: var(--accent); opacity: 0; }
+    .dd-item.active .dd-check { opacity: 1; }
+
+    .aux-chat-bar { display: none; } /* legacy */
     .chat-composer .copilot-pill,
     .aux-chat-bar .copilot-pill {
       width: 34px;
@@ -349,21 +557,14 @@
     .dropdown-wrap select::-ms-expand { display: none; }
     .chat-composer input {
       flex: 1;
-      background: var(--input-bg, rgba(255,255,255,.04));
-      border: 1px solid var(--input-border, rgba(255,255,255,.08));
-      color: var(--input-fg, var(--fg));
-      border-radius: 4px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--fg);
+      border-radius: 8px;
       padding: 8px 12px;
       outline: none;
       font-family: var(--font-ui);
       font-size: 13px;
-    }
-    .chat-composer input:focus {
-      border-color: var(--focus-border, var(--accent));
-      outline: 1px solid var(--focus-border, var(--accent));
-    }
-    .chat-composer input::placeholder {
-      color: var(--input-placeholder-fg, var(--muted));
     }
 
     /* Updates modal */
@@ -480,36 +681,19 @@
       border: 1px solid var(--border);
       color: var(--fg);
       padding: 4px 8px;
-      border-radius: 2px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: var(--fs-ui);
       display: flex;
       align-items: center;
       gap: 4px;
-      transition: background 0.1s, border-color 0.1s;
     }
-    .btn:hover { background: rgba(255,255,255,.05); border-color: var(--border); }
-    .btn:focus-visible { outline: 1px solid var(--focus-border, var(--accent)); outline-offset: 1px; }
-    .btn.primary { 
-      background: var(--button-bg, var(--accent)); 
-      border-color: var(--button-border, var(--accent)); 
-      color: var(--button-fg, #fff); 
-    }
-    .btn.primary:hover { 
-      background: var(--button-hover-bg, color-mix(in oklab, var(--accent) 90%, black)); 
-    }
-    .btn.secondary {
-      background: var(--button-secondary-bg, rgba(255,255,255,.08));
-      border-color: var(--border);
-      color: var(--button-secondary-fg, var(--fg));
-    }
-    .btn.secondary:hover {
-      background: var(--button-secondary-hover-bg, rgba(255,255,255,.12));
-    }
+    .btn:hover { border-color: #3a3a3a; }
+    .btn.primary { border-color: var(--accent); color: #cfeaff; }
     .btn.icon { width: 28px; height: 26px; justify-content: center; padding: 0; }
     .btn.hidden { display: none; }
-    .btn.plain { border: 0; background: transparent; }
-    .btn.plain:hover { border: 0; background: rgba(255,255,255,.05); }
+    .btn.plain { border: 0; }
+    .btn.plain:hover { border: 0; }
     .btn.plain:focus, .btn.plain:focus-visible { outline: none; box-shadow: none; }
 
     .updates-btn { position: relative; }
@@ -534,9 +718,18 @@
       70% { opacity: 0.2; }
     }
 
+    :root { --sidebar-divider-w: 4px; }
+
     .main {
       display: grid;
-      grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w);
+      /* Allow fixed columns to shrink; prevents overlap/overdraw at narrow widths */
+      grid-template-columns:
+        var(--activity-w)
+        minmax(0, var(--sidebar-w))
+        var(--sidebar-divider-w)
+        minmax(0, 1fr)
+        var(--aux-divider-w)
+        minmax(0, var(--auxiliary-w));
       /* Critical: give the grid a definite row size so `.content` can size its 1fr tracks
          even when the editor is "empty" (absolute-positioned empty state has no intrinsic height). */
       grid-template-rows: minmax(0, 1fr);
@@ -548,15 +741,16 @@
     /* Pin children to fixed columns so hiding sidebar doesn't shift placement */
     .main > .activitybar { grid-column: 1; }
     .main > .sidebar { grid-column: 2; }
-    .main > .content { grid-column: 3; }
-    .main > .resizer-x { grid-column: 4; }
-    .main > .auxiliarybar { grid-column: 5; }
+    .main > .sidebar-resizer { grid-column: 3; }
+    .main > .content { grid-column: 4; }
+    .main > .resizer-x { grid-column: 5; }
+    .main > .auxiliarybar { grid-column: 6; }
 
-    :root { --auxiliary-w: 360px; --aux-divider-w: 4px; }
+    /* Responsive aux width; JS resizer can still override with px */
+    :root { --auxiliary-w: clamp(260px, 30vw, 360px); --aux-divider-w: 4px; }
 
     .activitybar {
       background: var(--activity-bg);
-      width: var(--activity-w);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -602,9 +796,10 @@
       background: var(--accent);
     }
     .act {
-      width: 48px;
-      height: 48px;
-      border-radius: 0;
+      /* Match VS Code-ish activity item sizing so the active indicator is flush to the bar edge */
+      width: var(--activity-w);
+      height: var(--activity-w);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -641,23 +836,22 @@
       overflow: visible;
     }
     .sidebar-header {
-      padding: 0 8px;
-      height: 35px;
+      padding: 10px 10px 8px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
     }
-    .sidebar-title { color: var(--muted); font-weight: normal; font-size: 11px; line-height: 35px; text-transform: uppercase; }
-    .sidebar-body { padding: 0; overflow-x: visible; overflow-y: auto; min-height: 0; }
+    .sidebar-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    .sidebar-body { padding: 8px; overflow-x: visible; overflow-y: auto; min-height: 0; }
 
-    .tree { font-family: var(--font-ui); font-size: var(--fs-ui); line-height: 1.8; padding: 8px; }
+    .tree { font-family: var(--font-ui); font-size: var(--fs-ui); line-height: 1.8; }
     .tree .item {
       display: flex; gap: 8px; align-items: center;
-      padding: 2px 8px; border-radius: 0; cursor: pointer;
+      padding: 4px 8px; border-radius: 6px; cursor: pointer;
       color: var(--sidebar-fg, var(--fg));
       overflow: visible;
     }
-    .tree .item:hover { background: var(--list-hover-bg, rgba(255,255,255,.05)); color: var(--list-hover-fg, inherit); }
+    .tree .item:hover { background: var(--list-hover-bg, rgba(255,255,255,.05)); }
     .tree .item.active { 
       background: var(--list-activeSelection-bg, rgba(0,122,204,.18)); 
       outline: 1px solid var(--list-activeSelection-border, rgba(0,122,204,.25)); 
@@ -709,9 +903,10 @@
     .tabs {
       display: flex; gap: 0;
       background: var(--tab-bg);
-      border-bottom: 1px solid var(--border);\n      user-select: none;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
       overflow-x: auto;
-      min-height: 35px;
+      min-height: 34px;
       align-items: stretch;
     }
     .tab {
@@ -723,7 +918,7 @@
       max-width: 260px;
       flex-shrink: 0;
       overflow: visible;
-      height: 35px;
+      height: 34px;
       color: var(--tab-inactive-fg, var(--fg));
     }
     .tab:hover { background: rgba(255,255,255,.05); }
@@ -748,7 +943,7 @@
       min-height: 200px; /* Ensure minimum visible height */
     }
     .gutter {
-      background: var(--editor-bg);
+      background: #191919;
       border-right: 1px solid var(--border);
       padding: 10px 0;
       font-family: var(--font-mono);
@@ -882,32 +1077,27 @@
     .panel-tabs {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 8px;
-      height: 35px;
       border-bottom: 1px solid var(--border);
       user-select: none;
     }
     .panel-left { display:flex; gap: 6px; align-items:center; }
     /* VS Code-like panel tabs with underline for active */
     .pill {
-      padding: 0 10px;
-      height: 35px;
+      padding: 8px 10px;
       border-radius: 0;
       background: transparent;
       border: 0;
       border-bottom: 2px solid transparent;
       cursor: pointer;
       display: flex; align-items: center; gap: 6px;
-      color: var(--panel-title-inactive-fg, var(--muted));
+      color: var(--muted);
       font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: normal;
-      font-weight: normal;
+      letter-spacing: .06em;
+      font-weight: 600;
     }
-    .pill:hover { color: var(--panel-title-active-fg, #fff); background: rgba(255,255,255,.03); }
-    .pill.active { 
-      border-bottom-color: var(--panel-title-active-border, var(--accent)); 
-      color: var(--panel-title-active-fg, #fff); 
-    }
+    .pill:hover { color: #fff; background: rgba(255,255,255,.03); }
+    .pill.active { border-bottom-color: var(--accent); color: #fff; }
 
     .terminal {
       font-family: var(--font-mono);
@@ -926,8 +1116,9 @@
     }
     .term-line { color: var(--panel-fg, var(--fg)); }
     .term-dim { color: var(--muted); }
-    .term-err { color: var(--danger); }
-    .term-ok  { color: #89d185; }
+    /* Monochrome terminal: avoid semantic red/green */
+    .term-err { color: var(--panel-fg, var(--fg)); }
+    .term-ok  { color: var(--panel-fg, var(--fg)); }
 
     .term-input-line {
       display: flex;
@@ -939,7 +1130,7 @@
       border: 1px solid rgba(255,255,255,.08);
     }
     .prompt {
-      color: #89d185;
+      color: var(--panel-fg, var(--fg));
       font-family: var(--font-mono);
       font-size: 12px;
       line-height: 1.5;
@@ -961,6 +1152,9 @@
       font-family: var(--font-mono);
       font-size: 12px;
       line-height: 1.5;
+    }
+    .cmd::placeholder {
+      color: var(--muted);
     }
     /* Terminal IntelliSense-style suggest dropdown */
     .suggest {
@@ -994,18 +1188,15 @@
 
     .statusbar {
       background: var(--status-bg);
-      height: var(--statusbar-h);
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
-      padding: 0;
+      padding: 0 10px;
       color: var(--status-fg, white);
       user-select: none;
-      border-top: 1px solid var(--border);
-      font-size: 12px;
     }
-    .status-left, .status-right { display:flex; gap: 0; align-items:center; }
-    .status-item { display: flex; align-items: center; gap: 4px; margin: 0 3px; padding: 0 5px; }
+    .status-left, .status-right { display:flex; gap: 10px; align-items:center; }
+    .status-item { display: flex; align-items: center; gap: 4px; }
 
     /* Editor empty state */
     .editor-empty {
@@ -1100,32 +1291,32 @@
       display: flex; align-items: center; justify-content: space-between;
       user-select: none;
     }
-    .aux-title { letter-spacing: .06em; color: var(--muted); font-weight: 600; font-size: 11px; }
+    /* Aux header: treat CHAT title like an always-active single tab */
+    .aux-title {
+      letter-spacing: .06em;
+      font-weight: 600;
+      font-size: 11px;
+      color: var(--fg);
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      /* underline highlight */
+      padding-bottom: 8px;
+      margin-bottom: -8px;
+      border-bottom: 2px solid var(--accent);
+    }
     .aux-body { padding: 10px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
-    .aux-input { display: flex; gap: 8px; padding: 10px; border-top: 1px solid var(--border); }
-    .aux-input input { 
-      flex: 1; 
-      background: var(--input-bg, rgba(255,255,255,.04)); 
-      border: 1px solid var(--input-border, rgba(255,255,255,.08)); 
-      color: var(--input-fg, var(--fg)); 
-      border-radius: 4px; 
-      padding: 8px 10px; 
-      outline: none; 
-      font-family: var(--font-ui); 
-      font-size: 12px; 
-    }
-    .aux-input input:focus {
-      border-color: var(--focus-border, var(--accent));
-      outline: 1px solid var(--focus-border, var(--accent));
-    }
-    .aux-input input::placeholder {
-      color: var(--input-placeholder-fg, var(--muted));
-    }
+    /* Composer host (was a flex row for the legacy one-line input) */
+    .aux-input { display: block; padding: 8px; border-top: 1px solid var(--border); background: var(--panel-bg, #1b1b1b); }
+    .aux-input .composer { width: 100%; }
+    .aux-input input { flex: 1; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--fg); border-radius: 8px; padding: 8px 10px; outline: none; font-family: var(--font-ui); font-size: 12px; }
     .msg { display: inline-flex; max-width: 90%; padding: 8px 10px; border-radius: 8px; }
     .msg.user { align-self: flex-end; background: rgba(0,122,204,.18); border: 1px solid rgba(0,122,204,.25); }
     .msg.bot { align-self: flex-start; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); }
     .resizer-x { width: var(--aux-divider-w); cursor: col-resize; background: transparent; align-self: stretch; }
     .resizer-x:hover { background: rgba(255,255,255,.06); }
+    .sidebar-resizer { width: var(--sidebar-divider-w); cursor: col-resize; background: transparent; align-self: stretch; }
+    .sidebar-resizer:hover { background: rgba(255,255,255,.06); }
 
     .overlay {
       position: fixed;
@@ -1151,17 +1342,11 @@
       border: 0;
       outline: none;
       padding: 12px;
-      background: var(--input-bg, #1f1f1f);
-      color: var(--input-fg, #fff);
+      background: #1f1f1f;
+      color: #fff;
       font-family: var(--font-ui);
       font-size: 14px;
-      border-bottom: 1px solid var(--input-border, rgba(255,255,255,.08));
-    }
-    .palette input:focus {
-      border-bottom-color: var(--focus-border, var(--accent));
-    }
-    .palette input::placeholder {
-      color: var(--input-placeholder-fg, var(--muted));
+      border-bottom: 1px solid rgba(255,255,255,.08);
     }
     .palette-list { max-height: 320px; overflow: auto; }
     .pal-item {
@@ -1178,18 +1363,21 @@
     .pal-kbd { color: var(--muted); font-size: 11px; }
 
     .hide-activity .activitybar { display: none !important; }
-    .hide-activity .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
+    .hide-activity .main { grid-template-columns: 0px minmax(0, var(--sidebar-w)) var(--sidebar-divider-w) minmax(0,1fr) var(--aux-divider-w) minmax(0, var(--auxiliary-w)); }
     .hide-sidebar .sidebar { display: none !important; }
-    .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
-    .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px minmax(0,1fr) var(--aux-divider-w) var(--auxiliary-w); }
+    .hide-sidebar { --sidebar-divider-w: 0px; }
+    .hide-sidebar .main { grid-template-columns: var(--activity-w) 0px 0px minmax(0,1fr) var(--aux-divider-w) minmax(0, var(--auxiliary-w)); }
+    .hide-activity.hide-sidebar .main { grid-template-columns: 0px 0px 0px minmax(0,1fr) var(--aux-divider-w) minmax(0, var(--auxiliary-w)); }
     .hide-panel .panel { display: none !important; }
     .hide-panel .content { grid-template-rows: auto 1fr 0px 0px; }
     .hide-auxiliary .auxiliarybar, .hide-auxiliary .resizer-x { display: none !important; }
-    .hide-auxiliary .main { grid-template-columns: var(--activity-w) var(--sidebar-w) minmax(0,1fr) 0px 0px; }
+    .hide-auxiliary .main { grid-template-columns: var(--activity-w) minmax(0, var(--sidebar-w)) var(--sidebar-divider-w) minmax(0,1fr) 0px 0px; }
     /* Resolve combined hide states to avoid leftover reserved widths */
-    .hide-sidebar.hide-auxiliary .main { grid-template-columns: var(--activity-w) 0px minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-auxiliary .main { grid-template-columns: 0px var(--sidebar-w) minmax(0,1fr) 0px 0px; }
-    .hide-activity.hide-sidebar.hide-auxiliary .main { grid-template-columns: 0px 0px minmax(0,1fr) 0px 0px; }
+    .hide-sidebar.hide-auxiliary .main { grid-template-columns: var(--activity-w) 0px 0px minmax(0,1fr) 0px 0px; }
+    .hide-activity.hide-auxiliary .main { grid-template-columns: 0px minmax(0, var(--sidebar-w)) var(--sidebar-divider-w) minmax(0,1fr) 0px 0px; }
+    .hide-activity.hide-sidebar.hide-auxiliary .main { grid-template-columns: 0px 0px 0px minmax(0,1fr) 0px 0px; }
+
+    .hide-sidebar .sidebar-resizer { display: none !important; }
   </style>
 </head>
 <body>
@@ -1282,7 +1470,6 @@
           <div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div>
         </div>
         <svg class="icon fallback-icon" style="width:20px;height:20px"><use href="#icon-vscode"/></svg>
-        <div class="title" id="titleText">VS Code-ish</div>
       </div>
       <div class="title-center">
         <div class="project-quick" id="projectQuick" title="Show and Run Commands (Ctrl+Shift+P)" tabindex="0" role="button" aria-label="Project Command Center">
@@ -1364,6 +1551,9 @@
           <div class="tree" id="tree"></div>
         </div>
       </div>
+
+      <!-- Sidebar resizer (Explorer width) -->
+      <div class="sidebar-resizer" id="sidebarResizer" aria-hidden="true"></div>
 
       <div class="content">
         <div class="tabs" id="tabs"></div>
@@ -1454,33 +1644,45 @@
             </div>
           </div>
         </div>
+        <!-- Cursor-like Composer -->
         <div class="aux-input">
-          <input id="chatInput" placeholder="Ask something…" />
-          <button class="btn" id="chatSend">
-            <i class="codicon codicon-send"></i>
-            <svg class="icon fallback-icon"><use href="#icon-output"/></svg>
-          </button>
-        </div>
-        <div class="aux-chat-bar">
-          <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
-          <button class="btn icon" id="auxAttach"><i class="codicon codicon-attach"></i></button>
-          <span class="dropdown-wrap">
-            <select id="auxMode" title="Mode">
-              <option>Agent</option>
-              <option>Plan</option>
-              <option>Ask</option>
-              <option>Edit</option>
-            </select>
-            <i class="codicon codicon-chevron-down"></i>
-          </span>
-          <span class="dropdown-wrap">
-            <select id="auxModel" title="Model">
-              <option>GPT-5 mini</option>
-              <option>GPT-4.1</option>
-              <option>Claude Haiku 4.5</option>
-            </select>
-            <i class="codicon codicon-chevron-down"></i>
-          </span>
+          <div class="composer" id="auxComposer">
+            <div class="composer-top">
+              <div class="composer-actions">
+                <button class="iconbtn" id="auxAttach" title="Attach"><i class="codicon codicon-attach"></i></button>
+              </div>
+              <div class="composer-chips" id="auxChips"></div>
+            </div>
+            <div class="composer-input">
+              <textarea id="chatInput" placeholder="Describe what to build next" rows="2"></textarea>
+            </div>
+            <div class="composer-bottom">
+              <div class="composer-left">
+                <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
+                <div class="dd" id="auxModeDD">
+                  <button class="dd-btn" id="auxModeBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+                    <span class="dd-label">Agent</span>
+                    <i class="codicon codicon-chevron-down dd-chev"></i>
+                  </button>
+                  <div class="dd-menu" id="auxModeMenu" role="menu" aria-label="Mode"></div>
+                </div>
+                <div class="dd" id="auxModelDD">
+                  <button class="dd-btn" id="auxModelBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+                    <span class="dd-label">GPT-5 mini</span>
+                    <i class="codicon codicon-chevron-down dd-chev"></i>
+                  </button>
+                  <div class="dd-menu" id="auxModelMenu" role="menu" aria-label="Model"></div>
+                </div>
+                <button class="iconbtn plain" id="auxTools" title="Tools" type="button"><i class="codicon codicon-tools"></i></button>
+              </div>
+              <div class="composer-right">
+                <button class="btn" id="chatSend" title="Send">
+                  <i class="codicon codicon-send"></i>
+                  <svg class="icon fallback-icon"><use href="#icon-output"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1545,27 +1747,40 @@
         </div>
       </div>
       <div class="chat-composer">
-        <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
-        <button class="btn icon" id="chatAttach"><i class="codicon codicon-attach"></i></button>
-        <span class="dropdown-wrap">
-          <select id="chatMode" title="Mode">
-          <option>Agent</option>
-          <option>Plan</option>
-          <option>Ask</option>
-          <option>Edit</option>
-          </select>
-          <i class="codicon codicon-chevron-down"></i>
-        </span>
-        <span class="dropdown-wrap">
-          <select id="chatModel" title="Model">
-          <option>GPT-5 mini</option>
-          <option>GPT-4.1</option>
-          <option>Claude Haiku 4.5</option>
-          </select>
-          <i class="codicon codicon-chevron-down"></i>
-        </span>
-        <input id="chatInputStandalone" placeholder="Describe what to build next" />
-        <button class="btn" id="chatSendStandalone"><i class="codicon codicon-send"></i></button>
+        <div class="composer" id="chatComposerStandalone">
+          <div class="composer-top">
+            <div class="composer-actions">
+              <button class="iconbtn" id="chatAttach" title="Attach"><i class="codicon codicon-attach"></i></button>
+            </div>
+            <div class="composer-chips" id="chatChips"></div>
+          </div>
+          <div class="composer-input">
+            <textarea id="chatInputStandalone" placeholder="Describe what to build next" rows="2"></textarea>
+          </div>
+          <div class="composer-bottom">
+            <div class="composer-left">
+              <div class="copilot-pill copilot-active" aria-hidden="true"><i class="codicon codicon-copilot"></i></div>
+              <div class="dd" id="chatModeDD">
+                <button class="dd-btn" id="chatModeBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+                  <span class="dd-label">Agent</span>
+                  <i class="codicon codicon-chevron-down dd-chev"></i>
+                </button>
+                <div class="dd-menu" id="chatModeMenu" role="menu" aria-label="Mode"></div>
+              </div>
+              <div class="dd" id="chatModelDD">
+                <button class="dd-btn" id="chatModelBtn" type="button" aria-haspopup="menu" aria-expanded="false">
+                  <span class="dd-label">Claude Haiku 4.5</span>
+                  <i class="codicon codicon-chevron-down dd-chev"></i>
+                </button>
+                <div class="dd-menu" id="chatModelMenu" role="menu" aria-label="Model"></div>
+              </div>
+              <button class="iconbtn plain" id="chatTools" title="Tools" type="button"><i class="codicon codicon-tools"></i></button>
+            </div>
+            <div class="composer-right">
+              <button class="btn" id="chatSendStandalone" title="Send"><i class="codicon codicon-send"></i></button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -1589,7 +1804,6 @@
     const statusMsg = document.getElementById('statusMsg');
     const statusFile = document.getElementById('statusFile');
     const statusPos = document.getElementById('statusPos');
-    const titleText = document.getElementById('titleText');
     const tree = document.getElementById('tree');
     const sidebarTitle = document.getElementById('sidebarTitle');
     const tabs = document.getElementById('tabs');
@@ -1620,11 +1834,14 @@
     const btnChat = document.getElementById('btnChat');
     const aux = document.getElementById('aux');
     const auxResizer = document.getElementById('auxResizer');
+    const sidebarResizer = document.getElementById('sidebarResizer');
     const panelResizer = document.getElementById('panelResizer');
     const chatLog = document.getElementById('chatLog');
     const auxEmptyState = document.getElementById('auxEmpty');
     const chatInput = document.getElementById('chatInput');
     const themeFile = document.getElementById('themeFile');
+    const auxChips = document.getElementById('auxChips');
+    const chatChips = document.getElementById('chatChips');
     const mainEl = document.querySelector('.main');
     const activityBarEl = document.querySelector('.activitybar');
     const activityTopHost = document.getElementById('activityTopHost');
@@ -2019,7 +2236,13 @@
       chatInputStandalone.value='';
       setTimeout(()=>chatWinPost('bot', 'Echo: '+q), 200);
     });
-    chatInputStandalone?.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); chatSendStandalone.click(); }});
+    chatInputStandalone?.addEventListener('keydown', (e)=>{
+      // textarea: Enter sends, Shift+Enter inserts newline
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        chatSendStandalone.click();
+      }
+    });
 
     function getIcon(filename) {
       const ext = filename.split('.').pop().toLowerCase();
@@ -2092,6 +2315,8 @@ body {
 
     // Pick a sensible initial file to ensure code is visible on first load
     let currentFile = 'app.js', dirty = false, currentLine = 1;
+    // Chat composer state (visual only)
+    let dismissedChipFor = null;
     (function chooseInitialFile(){
       try {
         const get = (n)=> (files.get(n)||'').trim();
@@ -2128,7 +2353,6 @@ body {
     function setDirty(isDirty) {
       dirty = isDirty;
       updateTabState();
-      titleText.textContent = isDirty ? `● ${currentFile}` : currentFile;
     }
 
     // [Rest of JavaScript - tokenizer, highlighting, etc. - keeping previous implementation]
@@ -2155,6 +2379,103 @@ body {
         '"': '&quot;',
         "'": '&#39;',
       }[c]));
+    }
+
+    function syncComposerChips() {
+      // Cursor-like: show current file as a "context chip" above the prompt.
+      const name = currentFile || '';
+      const base = String(name).split('/').pop();
+      const html = (!name || (dismissedChipFor && dismissedChipFor === name))
+        ? ''
+        : `<span class="chip" title="${escapeHtml(name)}">
+            <button class="chip-x" type="button" data-chip-close="1" aria-label="Remove file"><i class="codicon codicon-close"></i></button>
+            ${fileIconHTML(name)}
+            <span class="chip-name">${escapeHtml(base)}</span>
+          </span>`;
+      if (auxChips) auxChips.innerHTML = html;
+      if (chatChips) chatChips.innerHTML = html;
+    }
+
+    function setupChipDismissal() {
+      function onClick(e) {
+        const btn = e.target?.closest?.('[data-chip-close="1"]');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dismissedChipFor = currentFile || null;
+        syncComposerChips();
+      }
+      auxChips?.addEventListener('click', onClick);
+      chatChips?.addEventListener('click', onClick);
+    }
+
+    function setupDropdown(ddId, btnId, menuId, options, initialValue) {
+      const ddEl = document.getElementById(ddId);
+      const btnEl = document.getElementById(btnId);
+      const menuEl = document.getElementById(menuId);
+      if (!ddEl || !btnEl || !menuEl) return null;
+      const labelEl = btnEl.querySelector('.dd-label');
+
+      const opts = (options || []).map(String);
+      function setValue(v) {
+        const value = String(v ?? '');
+        ddEl.dataset.value = value;
+        if (labelEl) labelEl.textContent = value;
+        menuEl.querySelectorAll('.dd-item').forEach((node) => {
+          node.classList.toggle('active', node.dataset.value === value);
+        });
+      }
+
+      menuEl.innerHTML = opts.map((opt) => {
+        const v = escapeHtml(opt);
+        return `<div class="dd-item" role="menuitem" tabindex="-1" data-value="${v}">
+          <span>${v}</span>
+          <span class="dd-check"><i class="codicon codicon-check"></i></span>
+        </div>`;
+      }).join('');
+
+      function open() {
+        // Decide whether to open up or down based on viewport space
+        ddEl.classList.add('open');
+        btnEl.setAttribute('aria-expanded', 'true');
+        ddEl.classList.remove('up');
+        // Measure after opening
+        const m = menuEl.getBoundingClientRect();
+        const b = btnEl.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - b.bottom;
+        const spaceAbove = b.top;
+        const need = m.height + 12;
+        if (spaceBelow < need && spaceAbove > spaceBelow) {
+          ddEl.classList.add('up');
+        }
+      }
+      function close() {
+        ddEl.classList.remove('open');
+        btnEl.setAttribute('aria-expanded', 'false');
+      }
+      function toggle() { ddEl.classList.contains('open') ? close() : open(); }
+
+      btnEl.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); toggle(); });
+      menuEl.addEventListener('click', (e) => {
+        const item = e.target.closest?.('.dd-item');
+        if (!item) return;
+        e.preventDefault();
+        e.stopPropagation();
+        setValue(item.dataset.value || '');
+        close();
+      });
+      window.addEventListener('mousedown', (e) => {
+        if (!ddEl.classList.contains('open')) return;
+        if (e.target.closest?.(`#${ddId}`)) return;
+        close();
+      });
+      window.addEventListener('keydown', (e) => {
+        if (!ddEl.classList.contains('open')) return;
+        if (e.key === 'Escape') { e.preventDefault(); close(); }
+      });
+
+      setValue(initialValue ?? opts[0] ?? '');
+      return { setValue, open, close };
     }
 
     function highlight(code,ln) {
@@ -2258,7 +2579,33 @@ body {
       }
     }
 
-    function openFile(file) { if(!file || !files.has(file)) { currentFile=null; setEditorEmptyMode(true); renderTabs(); renderTree(); return; } if(dirty){files.set(currentFile,ta.value);saveToStorage();setDirty(false);} currentFile=file; statusFile.textContent=file; setEditorEmptyMode(false); ta.value=files.get(file)??''; currentLine=1; syncHighlightAndGutter(); renderTabs(); renderTree(); setStatus(`Opened ${file}`); ta.focus(); }
+    function openFile(file) {
+      if(!file || !files.has(file)) {
+        currentFile=null;
+        setEditorEmptyMode(true);
+        renderTabs();
+        renderTree();
+        try { syncComposerChips(); } catch {}
+        return;
+      }
+      if(dirty){
+        files.set(currentFile,ta.value);
+        saveToStorage();
+        setDirty(false);
+      }
+      currentFile=file;
+      dismissedChipFor = null;
+      statusFile.textContent=file;
+      setEditorEmptyMode(false);
+      ta.value=files.get(file)??'';
+      currentLine=1;
+      syncHighlightAndGutter();
+      renderTabs();
+      renderTree();
+      setStatus(`Opened ${file}`);
+      ta.focus();
+      try { syncComposerChips(); } catch {}
+    }
 
     document.querySelectorAll('.act[data-view]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('.act[data-view]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTree(btn.dataset.view);}));
     document.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>{document.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));p.classList.add('active');}));
@@ -2353,7 +2700,7 @@ body {
     const commands=[
       {label:'View: Toggle Sidebar',icon:'sidebar',run:()=>wb.classList.toggle('hide-sidebar'),kbd:'Ctrl+B'},
       {label:'View: Toggle Panel',icon:'terminal',run:()=>wb.classList.toggle('hide-panel'),kbd:'Ctrl+`'},
-      {label:'View: Move Activity Bar to Top',icon:'layout',run:()=>setActivityBarPosition(activityBarPosition==='top'?'left':'top')},
+      {label:'View: Toggle Activity Bar Position (Top/Left)',icon:'layout',run:()=>setActivityBarPosition(activityBarPosition==='top'?'left':'top')},
       {label:'File: Save',icon:'file',run:()=>{files.set(currentFile,ta.value);setDirty(false);saveToStorage();setStatus('Saved');},kbd:'Ctrl+S'},
       {label:'File: New File',icon:'file',run:()=>{const name=prompt('File name:','untitled.txt');if(name&&!files.has(name)){files.set(name,'');saveToStorage();openFile(name);}}},
       {label:'Terminal: Clear',icon:'terminal',run:()=>{termOut.innerHTML='';termPrint('Cleared','term-dim');}},
@@ -2486,6 +2833,49 @@ body {
       });
     })();
 
+    // Explorer sidebar resizer + persistence
+    (function setupSidebarSizer(){
+      if (!sidebarResizer) return;
+      const root = document.documentElement;
+      const LS_KEY = 'sidebar-w';
+      try {
+        const saved = localStorage.getItem(LS_KEY);
+        if (saved) root.style.setProperty('--sidebar-w', saved);
+      } catch {}
+      let startX=0, startW=0, dragging=false;
+      sidebarResizer.addEventListener('mousedown', (e)=>{
+        if (wb.classList.contains('hide-sidebar')) return;
+        dragging=true;
+        startX=e.clientX;
+        const cs=getComputedStyle(root).getPropertyValue('--sidebar-w').trim();
+        // If CSS is still a clamp(), parseInt will return NaN; fall back to current sidebar width.
+        startW=parseInt(cs,10);
+        if (!Number.isFinite(startW)) {
+          const r = document.querySelector('.sidebar')?.getBoundingClientRect();
+          startW = Math.round(r?.width || 280);
+        }
+        document.body.style.userSelect='none';
+        document.body.style.cursor='col-resize';
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove',(e)=>{
+        if(!dragging)return;
+        const dx=e.clientX - startX;
+        // Dragging right increases sidebar width; dragging left decreases.
+        const newW=Math.max(180, Math.min(520, startW + dx));
+        root.style.setProperty('--sidebar-w', newW+'px');
+        refreshEditorSoon();
+      });
+      window.addEventListener('mouseup',()=>{
+        if(!dragging)return;
+        dragging=false;
+        document.body.style.userSelect='';
+        document.body.style.cursor='';
+        try { localStorage.setItem(LS_KEY, getComputedStyle(root).getPropertyValue('--sidebar-w').trim()); } catch {}
+        refreshEditorSoon();
+      });
+    })();
+
     // Terminal panel resizer (thin splitter, no persistence)
     (function setupPanelSizer(){
       if (!panelResizer || !contentEl) return;
@@ -2558,7 +2948,13 @@ body {
       chatInput.value='';
       setTimeout(()=>chatPost('bot', 'Echo: '+q), 200);
     };
-    chatInput?.addEventListener('keydown',(e)=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('chatSend').click(); }});
+    chatInput?.addEventListener('keydown',(e)=>{
+      // textarea: Enter sends, Shift+Enter inserts newline
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('chatSend').click();
+      }
+    });
     syncAuxEmptyState();
 
     // Workbench theme mapper
@@ -2603,174 +2999,39 @@ body {
       } catch {}
 
       const map = [
-        // Title bar
         ['--titlebar-bg', c['titleBar.activeBackground']],
         ['--titlebar-fg', c['titleBar.activeForeground']],
-        ['--titlebar-inactive-fg', c['titleBar.inactiveForeground']],
-        ['--titlebar-border', c['titleBar.border']],
-        
-        // Activity bar
         ['--activity-bg', c['activityBar.background']],
         ['--activity-fg', c['activityBar.foreground']],
         ['--activity-active-fg', c['activityBar.foreground']],
-        ['--activity-inactive-fg', c['activityBar.inactiveForeground']],
-        ['--activity-border', c['activityBar.border']],
-        ['--activity-active-border', c['activityBar.activeBorder']],
-        ['--activity-drop-border', c['activityBar.dropBorder']],
-        
-        // Sidebar
         ['--sidebar-bg', c['sideBar.background']],
         ['--sidebar-fg', c['sideBar.foreground']],
-        ['--sidebar-border', c['sideBar.border']],
-        ['--sidebar-title-fg', c['sideBarTitle.foreground']],
-        ['--sidebar-section-header-bg', c['sideBarSectionHeader.background']],
-        ['--sidebar-section-header-fg', c['sideBarSectionHeader.foreground']],
-        ['--sidebar-section-header-border', c['sideBarSectionHeader.border']],
-        
-        // Editor
         ['--editor-bg', c['editor.background']],
         ['--editor-fg', c['editor.foreground']],
         ['--editor-selection-bg', c['editor.selectionBackground']],
         ['--editor-lineHighlight-bg', c['editor.lineHighlightBackground']],
         ['--editor-cursor-fg', c['editorCursor.foreground']],
         ['--editorLineNumber-fg', c['editorLineNumber.foreground']],
-        ['--editorLineNumber-active-fg', c['editorLineNumber.activeForeground']],
-        
-        // Editor widgets
-        ['--editor-widget-bg', c['editorWidget.background']],
-        ['--editor-widget-border', c['editorWidget.border']],
-        ['--editor-widget-fg', c['editorWidget.foreground']],
-        ['--editor-suggest-bg', c['editorSuggestWidget.background']],
-        ['--editor-suggest-border', c['editorSuggestWidget.border']],
-        ['--editor-suggest-fg', c['editorSuggestWidget.foreground']],
-        ['--editor-suggest-selected-bg', c['editorSuggestWidget.selectedBackground']],
-        ['--editor-suggest-highlight-fg', c['editorSuggestWidget.highlightForeground']],
-        ['--editor-hover-bg', c['editorHoverWidget.background']],
-        ['--editor-hover-border', c['editorHoverWidget.border']],
-        
-        // Tabs
+        ['--panel-bg', c['panel.background']],
+        ['--panel-fg', c['panel.foreground']],
+        ['--status-bg', c['statusBar.background']],
+        ['--status-fg', c['statusBar.foreground']],
+        ['--command-bg', c['commandCenter.background'] || c['titleBar.inactiveBackground']],
+        ['--menu-bg', c['menu.background'] || c['editor.background']],
+        ['--chatwin-bg', c['editor.background']],
+        ['--chatwin-fg', c['foreground']],
         ['--tab-active-bg', c['tab.activeBackground']],
         ['--tab-bg', c['tab.inactiveBackground']],
         ['--tab-fg', c['tab.activeForeground']],
         ['--tab-inactive-fg', c['tab.inactiveForeground']],
-        ['--tab-border', c['tab.border']],
-        ['--tab-active-border', c['tab.activeBorder']],
-        ['--tab-active-border-top', c['tab.activeBorderTop']],
-        ['--tab-unfocused-active-border', c['tab.unfocusedActiveBorder']],
-        ['--tab-hover-bg', c['tab.hoverBackground']],
-        ['--tab-hover-border', c['tab.hoverBorder']],
-        ['--tab-active-modified-border', c['tab.activeModifiedBorder']],
-        ['--tab-inactive-modified-border', c['tab.inactiveModifiedBorder']],
-        
-        // Panel
-        ['--panel-bg', c['panel.background']],
-        ['--panel-fg', c['panel.foreground']],
-        ['--panel-border', c['panel.border']],
-        ['--panel-title-active-fg', c['panelTitle.activeForeground']],
-        ['--panel-title-inactive-fg', c['panelTitle.inactiveForeground']],
-        ['--panel-title-active-border', c['panelTitle.activeBorder']],
-        ['--panel-input-border', c['panelInput.border']],
-        
-        // Status bar
-        ['--status-bg', c['statusBar.background']],
-        ['--status-fg', c['statusBar.foreground']],
-        ['--status-border', c['statusBar.border']],
-        ['--status-debugging-bg', c['statusBar.debuggingBackground']],
-        ['--status-debugging-fg', c['statusBar.debuggingForeground']],
-        ['--status-no-folder-bg', c['statusBar.noFolderBackground']],
-        ['--status-no-folder-fg', c['statusBar.noFolderForeground']],
-        
-        // Input controls
-        ['--input-bg', c['input.background']],
-        ['--input-fg', c['input.foreground']],
-        ['--input-border', c['input.border']],
-        ['--input-placeholder-fg', c['input.placeholderForeground']],
-        ['--input-active-border', c['inputOption.activeBorder']],
-        
-        // Button
-        ['--button-bg', c['button.background']],
-        ['--button-fg', c['button.foreground']],
-        ['--button-hover-bg', c['button.hoverBackground']],
-        ['--button-border', c['button.border']],
-        ['--button-secondary-bg', c['button.secondaryBackground']],
-        ['--button-secondary-fg', c['button.secondaryForeground']],
-        ['--button-secondary-hover-bg', c['button.secondaryHoverBackground']],
-        
-        // List / Tree
-        ['--list-hover-bg', c['list.hoverBackground']],
-        ['--list-hover-fg', c['list.hoverForeground']],
-        ['--list-activeSelection-bg', c['list.activeSelectionBackground']],
-        ['--list-activeSelection-fg', c['list.activeSelectionForeground']],
-        ['--list-inactiveSelection-bg', c['list.inactiveSelectionBackground']],
-        ['--list-inactiveSelection-fg', c['list.inactiveSelectionForeground']],
-        ['--list-focus-bg', c['list.focusBackground']],
-        ['--list-focus-fg', c['list.focusForeground']],
-        ['--list-focus-outline', c['list.focusOutline']],
-        ['--list-drop-bg', c['list.dropBackground']],
-        ['--list-highlight-fg', c['list.highlightForeground']],
-        ['--list-error-fg', c['list.errorForeground']],
-        ['--list-warning-fg', c['list.warningForeground']],
-        ['--list-activeSelection-border', c['list.activeSelectionForeground'] ? `color-mix(in oklab, ${c['list.activeSelectionForeground']} 30%, transparent)` : undefined],
-        
-        // Dropdown
-        ['--dropdown-bg', c['dropdown.background']],
-        ['--dropdown-fg', c['dropdown.foreground']],
-        ['--dropdown-border', c['dropdown.border']],
-        
-        // Scrollbar
-        ['--scrollbar-slider-bg', c['scrollbarSlider.background']],
-        ['--scrollbar-slider-hover-bg', c['scrollbarSlider.hoverBackground']],
-        ['--scrollbar-slider-active-bg', c['scrollbarSlider.activeBackground']],
-        
-        // Badge
-        ['--badge-bg', c['badge.background']],
-        ['--badge-fg', c['badge.foreground']],
-        
-        // Progress bar
-        ['--progress-bg', c['progressBar.background']],
-        
-        // Terminal ANSI colors
-        ['--term-ansi-black', c['terminal.ansiBlack']],
-        ['--term-ansi-red', c['terminal.ansiRed']],
-        ['--term-ansi-green', c['terminal.ansiGreen']],
-        ['--term-ansi-yellow', c['terminal.ansiYellow']],
-        ['--term-ansi-blue', c['terminal.ansiBlue']],
-        ['--term-ansi-magenta', c['terminal.ansiMagenta']],
-        ['--term-ansi-cyan', c['terminal.ansiCyan']],
-        ['--term-ansi-white', c['terminal.ansiWhite']],
-        ['--term-ansi-bright-black', c['terminal.ansiBrightBlack']],
-        ['--term-ansi-bright-red', c['terminal.ansiBrightRed']],
-        ['--term-ansi-bright-green', c['terminal.ansiBrightGreen']],
-        ['--term-ansi-bright-yellow', c['terminal.ansiBrightYellow']],
-        ['--term-ansi-bright-blue', c['terminal.ansiBrightBlue']],
-        ['--term-ansi-bright-magenta', c['terminal.ansiBrightMagenta']],
-        ['--term-ansi-bright-cyan', c['terminal.ansiBrightCyan']],
-        ['--term-ansi-bright-white', c['terminal.ansiBrightWhite']],
-        ['--term-selection-bg', c['terminal.selectionBackground']],
-        ['--term-cursor-fg', c['terminalCursor.foreground']],
-        
-        // Git decorations
-        ['--git-added', c['gitDecoration.addedResourceForeground']],
-        ['--git-modified', c['gitDecoration.modifiedResourceForeground']],
-        ['--git-deleted', c['gitDecoration.deletedResourceForeground']],
-        ['--git-untracked', c['gitDecoration.untrackedResourceForeground']],
-        ['--git-ignored', c['gitDecoration.ignoredResourceForeground']],
-        ['--git-conflicting', c['gitDecoration.conflictingResourceForeground']],
-        
-        // Other UI
-        ['--command-bg', c['commandCenter.background'] || c['titleBar.inactiveBackground']],
-        ['--menu-bg', c['menu.background'] || c['editor.background']],
-        ['--menu-fg', c['menu.foreground']],
-        ['--menu-selection-bg', c['menu.selectionBackground']],
-        ['--menu-selection-fg', c['menu.selectionForeground']],
-        ['--menu-border', c['menu.border']],
-        ['--chatwin-bg', c['editor.background']],
-        ['--chatwin-fg', c['foreground']],
         ['--accent', accent],
         ['--border', c['panel.border'] || c['contrastBorder']],
         ['--fg', c['foreground']],
         ['--muted', c['descriptionForeground']],
-        ['--focus-border', c['focusBorder']],
+        ['--list-hover-bg', c['list.hoverBackground']],
+        ['--list-activeSelection-bg', c['list.activeSelectionBackground']],
+        ['--list-activeSelection-fg', c['list.activeSelectionForeground']],
+        ['--list-activeSelection-border', c['list.activeSelectionForeground'] ? `color-mix(in oklab, ${c['list.activeSelectionForeground']} 30%, transparent)` : undefined]
       ];
       const root = document.documentElement;
       for (const [k,v] of map) if (v) root.style.setProperty(k, v);
@@ -2864,6 +3125,14 @@ body {
       })();
       renderTree();renderTabs();openFile(currentFile);setDirty(false);syncToggleButtons();refreshEditorSoon();
       syncEmptyStateShortcuts();
+      setupChipDismissal();
+      // Dropdowns (Mode/Model) for both composers
+      const modeOptions = ['Agent','Plan','Ask','Edit'];
+      const modelOptions = ['GPT-5 mini','GPT-4.1','Claude Haiku 4.5'];
+      setupDropdown('auxModeDD', 'auxModeBtn', 'auxModeMenu', modeOptions, 'Agent');
+      setupDropdown('chatModeDD', 'chatModeBtn', 'chatModeMenu', modeOptions, 'Agent');
+      setupDropdown('auxModelDD', 'auxModelBtn', 'auxModelMenu', modelOptions, 'GPT-5 mini');
+      setupDropdown('chatModelDD', 'chatModelBtn', 'chatModelMenu', modelOptions, 'Claude Haiku 4.5');
     termPrint('Terminal ready. Type "help"','term-ok');
       window.addEventListener('load', ()=>refreshEditorSoon());
     }
